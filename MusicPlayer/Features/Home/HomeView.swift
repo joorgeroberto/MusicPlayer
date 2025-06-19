@@ -18,25 +18,31 @@ struct HomeView: View {
             NavigationView {
                 VStack(alignment: .leading) {
                     List(viewModel.songs, id: \.trackId) { song in
-                        VStack(alignment: .leading) {
-                            ListItem(song: song)
-                        }
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(
-                            .init(
-                                top: 8,
-                                leading: 16,
-                                bottom: 8,
-                                trailing: 16
+                        NavigationLink {
+                            SongDetailsView()
+                        } label: {
+                            VStack(alignment: .leading) {
+                                ListItem(song: song)
+                            }
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(
+                                .init(
+                                    top: 8,
+                                    leading: 16,
+                                    bottom: 8,
+                                    trailing: 16
+                                )
                             )
-                        )
-                        .onAppear {
-                            if song == viewModel.songs.last {
-                                Task {
-                                    await viewModel.loadMore()
+                            .onAppear {
+                                if song == viewModel.songs.last {
+                                    Task {
+                                        await viewModel.loadMore()
+                                    }
                                 }
                             }
                         }
+
+
                     }
                     .searchable(text: $viewModel.searchTerm, prompt: "Search")
                     .navigationTitle("Songs")
