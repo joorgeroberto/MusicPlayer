@@ -11,6 +11,7 @@ extension Color {
     struct Text {
         static let primary = Color.white
         static let secondary = Color(red: 115/255, green: 115/255, blue: 115/255)
+        static let darkGray = Color(red: 191/255, green: 191/255, blue: 191/255)
     }
 
     struct Background {

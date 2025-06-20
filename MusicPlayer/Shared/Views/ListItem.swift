@@ -11,7 +11,7 @@ struct ListItem: View {
 
     var body: some View {
         HStack {
-            Artwork(image: song.artworkUrl100)
+            Artwork(image: song.artworkLowQuality)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(song.trackName)
@@ -32,7 +32,8 @@ struct ListItem: View {
         artistId: 546381,
         trackName: "Run to the Hills (2015 Remaster)",
         artistName: "Iron Maiden",
-        artworkUrl100:  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg"
+        artworkLowQuality:  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg",
+        trackTimeMilliseconds: 233499
     )
     ListItem(song: song)
 }

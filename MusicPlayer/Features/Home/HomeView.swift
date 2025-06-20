@@ -19,7 +19,7 @@ struct HomeView: View {
                 VStack(alignment: .leading) {
                     List(viewModel.songs, id: \.trackId) { song in
                         NavigationLink {
-                            SongDetailsView()
+                            SongDetailsView(viewModel: SongDetailsViewModel(song: song))
                         } label: {
                             VStack(alignment: .leading) {
                                 ListItem(song: song)

@@ -15,7 +15,23 @@ struct Song: Codable, Identifiable, Equatable {
     let artistId: Int
     let trackName: String
     let artistName: String
-    let artworkUrl100: String
+    var artworkLowQuality: String
+    var artworkHighQuality: String {
+        artworkLowQuality.replacingImageSize(to: 600)
+    }
+    let trackTimeMilliseconds: Double
+    var trackTimeMinutesAndSeconds: String {
+        trackTimeMilliseconds.toMinutesAndSeconds()
+    }
 
     var id: Int { trackId }
+
+    private enum CodingKeys: String, CodingKey {
+        case trackId
+        case artistId
+        case trackName
+        case artistName
+        case artworkLowQuality = "artworkUrl100"
+        case trackTimeMilliseconds = "trackTimeMillis"
+    }
 }
