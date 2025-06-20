@@ -1,5 +1,5 @@
 //
-//  ListItemImage.swift
+//  Artwork.swift
 //  MusicPlayer
 //
 //  Created by Jorge de Carvalho on 19/06/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ListItemImage: View {
+struct Artwork: View {
     @State var image: String
     @State var width: CGFloat = 44
     @State var height: CGFloat = 44
@@ -21,8 +21,7 @@ struct ListItemImage: View {
         } placeholder: {
             Image("ic-music-note")
                 .resizable()
-            // deixar altura e largura em 54.4%
-                .frame(width: width, height: 24)
+                .frame(width: width * 0.544, height: width * 0.544)
                 .padding(10)
                 .background(
                     Color.Background.secondary
@@ -34,8 +33,7 @@ struct ListItemImage: View {
 }
 
 #Preview {
-//    let image = "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg"
-    let image = ""
-    ListItemImage(image: image, width: 44, height: 44)
+    let image = "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg"
+    Artwork(image: image, width: 44, height: 44)
         .preferredColorScheme(.dark)
 }

@@ -11,7 +11,7 @@ struct ListItem: View {
 
     var body: some View {
         HStack {
-            ListItemImage(image: song.artworkUrl100)
+            Artwork(image: song.artworkUrl100)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(song.trackName)
