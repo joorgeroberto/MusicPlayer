@@ -11,7 +11,7 @@ protocol ITunesServiceProtocol {
     func fetchMusicList(term: String, offset: Int, limit: Int) async throws -> ITunesSearchResponse
 }
 
-class ITunesService: ITunesServiceProtocol {
+final class ITunesService: ITunesServiceProtocol {
     private let networkManager: NetworkManagerProtocol
     private let baseURL = "https://itunes.apple.com"
 

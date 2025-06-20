@@ -8,6 +8,7 @@
 import Combine
 import SwiftUI
 
+@MainActor
 class HomeViewModel: ObservableObject {
     @Published var searchTerm = ""
     @Published var songs: [Song] = []
@@ -23,6 +24,7 @@ class HomeViewModel: ObservableObject {
         self.setupSearchDebounce()
     }
 
+//    @MainActor
     private func setupSearchDebounce() {
         $searchTerm
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
@@ -35,46 +37,51 @@ class HomeViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
-    @MainActor
+//    @MainActor
     func loadMore() async {
         guard !isLoadingMore, !searchTerm.isEmpty else { return }
 
-        isLoadingMore = true
-        defer { isLoadingMore = false }
-        do {
-            let response: ITunesSearchResponse = try await iTunesService.fetchMusicList(
-                term: searchTerm,
-                offset: offset,
-                limit: limit
-            )
-            let existingIds = Set(songs.map { $0.trackId })
+        Task { @MainActor [iTunesService] in
+            isLoadingMore = true
+            defer { isLoadingMore = false }
 
-            let filteredSongs = response.results.filter { !existingIds.contains($0.trackId) }
-            songs.append(contentsOf: filteredSongs)
-            offset += limit
-        } catch {
-            // TODO: Add Error Alert
+            do {
+                let response: ITunesSearchResponse = try await iTunesService.fetchMusicList(
+                    term: searchTerm,
+                    offset: offset,
+                    limit: limit
+                )
+                let existingIds = Set(songs.map { $0.trackId })
+
+                let filteredSongs = response.results.filter { !existingIds.contains($0.trackId) }
+                songs.append(contentsOf: filteredSongs)
+                offset += limit
+            } catch {
+                // TODO: Add Error Alert
+            }
         }
     }
 
-    @MainActor
+//    @MainActor
     func fetchMusicList() async {
         guard !searchTerm.isEmpty else {
             songs = []
             return
         }
 
-        offset = 0
-        do {
-            let response: ITunesSearchResponse = try await self.iTunesService.fetchMusicList(
-                term: searchTerm,
-                offset: offset,
-                limit: limit
-            )
-            songs = response.results
-            offset += limit
-        } catch {
-            // TODO: Add Error Alert
+        Task { @MainActor [iTunesService] in
+            offset = 0
+            do {
+                let response: ITunesSearchResponse = try await iTunesService.fetchMusicList(
+                    term: searchTerm,
+                    offset: offset,
+                    limit: limit
+                )
+                songs = response.results
+                offset += limit
+            } catch {
+                // TODO: Add Error Alert
+            }
         }
     }
 }

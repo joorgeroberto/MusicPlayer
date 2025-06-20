@@ -35,7 +35,7 @@ struct HomeView: View {
                             )
                             .onAppear {
                                 if song == viewModel.songs.last {
-                                    Task {
+                                    Task { [viewModel] in
                                         await viewModel.loadMore()
                                     }
                                 }

@@ -36,6 +36,6 @@ struct ListItemImage: View {
 #Preview {
 //    let image = "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg"
     let image = ""
-    ListItemImage(image: image, width: <#T##CGFloat#>)
+    ListItemImage(image: image, width: 44, height: 44)
         .preferredColorScheme(.dark)
 }
