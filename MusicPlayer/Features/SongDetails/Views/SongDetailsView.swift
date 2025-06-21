@@ -35,7 +35,9 @@ struct SongDetailsView: View {
 
                 CustomSlider
 
-                AudioPlayerButtons()
+                AudioPlayerButtons(
+                    isPlaying: $viewModel.isPlaying
+                )
             }
             .padding(.leading, 20)
             .padding(.trailing, 20)
@@ -45,21 +47,33 @@ struct SongDetailsView: View {
         .padding(.leading, 12)
         .padding(.trailing, 12)
         .padding(.bottom, 25)
+        .onDisappear {
+            viewModel.onDisappear()
+        }
     }
 
     
     var CustomSlider: some View {
         VStack(spacing: 4) {
-            Slider(value: $viewModel.sliderValue, in: 0...Double(viewModel.song.trackTimeMilliseconds))
+            Slider(
+                value: $viewModel.currentTime,
+                in: 0...29,
+                onEditingChanged: { isEditing in
+                    if !isEditing {
+                        viewModel.seek(to: viewModel.currentTime)
+                    }
+                }
+            )
 
             HStack {
-                Text("0.00")
+                Text(viewModel.currentTime.formatTime())
                     .font(.medium)
                     .foregroundColor(Color.Text.darkGray)
 
                 Spacer()
 
-                Text("-" + viewModel.song.trackTimeMinutesAndSeconds).font(.medium)
+                Text("-" + viewModel.duration.formatTime())
+                    .font(.medium)
                     .foregroundColor(Color.Text.darkGray)
             }
         }
@@ -74,6 +88,7 @@ struct SongDetailsView: View {
         artistId: 546381,
         trackName: "Run to the Hills (2015 Remaster)",
         artistName: "Iron Maiden",
+        previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/dc/e0/95/dce09593-59e9-7887-4788-b7b0545ab441/mzaf_4833405911961268816.plus.aac.p.m4a",
         artworkLowQuality:  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg",
         trackTimeMilliseconds: 233499
     )

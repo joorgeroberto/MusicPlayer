@@ -7,7 +7,11 @@
 
 import SwiftUI
 
+import AVFoundation
+
 struct AudioPlayerButtons: View {
+    @Binding var isPlaying: Bool
+
     var body: some View {
         HStack(alignment: .center, spacing: 20) {
             Spacer()
@@ -29,9 +33,9 @@ struct AudioPlayerButtons: View {
             }
 
             Button {
-
+                isPlaying.toggle()
             } label: {
-                Image(systemName: "play.fill")
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill" )
                     .resizable()
                     .frame(width:
                             18.67, height:

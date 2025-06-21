@@ -24,12 +24,11 @@ class HomeViewModel: ObservableObject {
         self.setupSearchDebounce()
     }
 
-//    @MainActor
     private func setupSearchDebounce() {
         $searchTerm
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .removeDuplicates()
-            .sink { [weak self] text in
+            .sink { [weak self] _ in
                 Task {
                     await self?.fetchMusicList()
                 }
@@ -37,7 +36,6 @@ class HomeViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
-//    @MainActor
     func loadMore() async {
         guard !isLoadingMore, !searchTerm.isEmpty else { return }
 
@@ -62,7 +60,6 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-//    @MainActor
     func fetchMusicList() async {
         guard !searchTerm.isEmpty else {
             songs = []

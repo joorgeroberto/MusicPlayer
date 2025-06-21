@@ -15,12 +15,10 @@ struct HomeView: View {
     }
 
     var body: some View {
-            NavigationView {
+            NavigationStack {
                 VStack(alignment: .leading) {
                     List(viewModel.songs, id: \.trackId) { song in
-                        NavigationLink {
-                            SongDetailsView(viewModel: SongDetailsViewModel(song: song))
-                        } label: {
+                        NavigationLink(value: song) {
                             VStack(alignment: .leading) {
                                 ListItem(song: song)
                             }
@@ -41,12 +39,14 @@ struct HomeView: View {
                                 }
                             }
                         }
-
-
+                        .listRowSeparator(.hidden)
                     }
                     .searchable(text: $viewModel.searchTerm, prompt: "Search")
                     .navigationTitle("Songs")
                     .listStyle(.plain)
+                    .navigationDestination(for: Song.self) { song in
+                        SongDetailsView(viewModel: SongDetailsViewModel(song: song))
+                    }
 
                     if viewModel.isLoadingMore {
                         HStack {
