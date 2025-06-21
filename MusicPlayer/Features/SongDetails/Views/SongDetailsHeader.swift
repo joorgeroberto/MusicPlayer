@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SongDetailsHeader: View {
     @Environment(\.dismiss) private var dismiss
+    @Binding var showMoreOptionsBottomSheet: Bool
 
     var body: some View {
         HStack {
@@ -24,7 +25,7 @@ struct SongDetailsHeader: View {
             Spacer()
 
             Button {
-                // TODO: Open More Options Bottom Sheet
+                showMoreOptionsBottomSheet.toggle()
             } label: {
                 Image("ic-more")
                     .resizable()

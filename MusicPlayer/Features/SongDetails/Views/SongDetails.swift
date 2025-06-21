@@ -13,11 +13,11 @@ struct SongDetails: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(song.trackName)
-                .font(.xLarge)
+                .font(.custom(.xxLarge, .regular))
                 .foregroundColor(Color.Text.primary)
 
             Text(song.artistName)
-                .font(.medium)
+                .font(.custom(.medium, .regular))
                 .foregroundColor(Color.Text.secondary)
         }
     }

@@ -16,7 +16,7 @@ struct SongDetailsView: View {
 
     var body: some View {
         VStack {
-            SongDetailsHeader()
+            SongDetailsHeader(showMoreOptionsBottomSheet: $viewModel.showMoreOptionsBottomSheet)
 
             Spacer()
 
@@ -50,9 +50,12 @@ struct SongDetailsView: View {
         .onDisappear {
             viewModel.onDisappear()
         }
+        .sheet(isPresented: $viewModel.showMoreOptionsBottomSheet) {
+            MoreOptionsBottomSheet(song: viewModel.song)
+        }
     }
 
-    
+    // TODO: Create Separate Component.
     var CustomSlider: some View {
         VStack(spacing: 4) {
             Slider(
@@ -70,7 +73,7 @@ struct SongDetailsView: View {
 
                 let trackHeight: CGFloat = 2
 
-                // ---- Minimum Track (ANTES da thumb) - Branco ----
+                // ---- Minimum Track (BEFORE thumb) - White ----
                 let minSize = CGSize(width: 1, height: trackHeight)
                 UIGraphicsBeginImageContextWithOptions(minSize, false, 0.0)
                 UIColor.white.setFill()
@@ -78,7 +81,7 @@ struct SongDetailsView: View {
                 let minTrackImage = UIGraphicsGetImageFromCurrentImageContext()
                 UIGraphicsEndImageContext()
 
-                // ---- Maximum Track (DEPOIS da thumb) - Cinza ----
+                // ---- Maximum Track (AFTER thumb) - Gray ----
                 UIGraphicsBeginImageContextWithOptions(minSize, false, 0.0)
                 UIColor.gray.setFill()  // Cor cinza
                 UIRectFill(CGRect(origin: .zero, size: minSize))
@@ -93,13 +96,13 @@ struct SongDetailsView: View {
 
             HStack {
                 Text(viewModel.currentTime.formatTime())
-                    .font(.medium)
+                    .font(.custom(.medium, .regular))
                     .foregroundColor(Color.Text.darkGray)
 
                 Spacer()
 
                 Text("-" + viewModel.duration.formatTime())
-                    .font(.medium)
+                    .font(.custom(.medium, .regular))
                     .foregroundColor(Color.Text.darkGray)
             }
         }
@@ -114,6 +117,7 @@ struct SongDetailsView: View {
         artistId: 546381,
         trackName: "Run to the Hills (2015 Remaster)",
         artistName: "Iron Maiden",
+        collectionName: "The Number of the Beast (2015 Remaster)",
         previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/dc/e0/95/dce09593-59e9-7887-4788-b7b0545ab441/mzaf_4833405911961268816.plus.aac.p.m4a",
         artworkLowQuality:  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg",
         trackTimeMilliseconds: 233499

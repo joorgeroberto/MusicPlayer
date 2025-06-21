@@ -14,6 +14,7 @@ final class SongDetailsViewModel: ObservableObject {
     @Published var song: Song
     @Published var player: AVPlayer?
     @Published var isPlaying = false
+    @Published var showMoreOptionsBottomSheet: Bool = false
 
     @Published var currentTime: Double = 0
     @Published var duration: Double = 29
@@ -24,8 +25,10 @@ final class SongDetailsViewModel: ObservableObject {
     init(song: Song) {
         self.song = song
         self.setupAVPlayer(url: song.previewUrl)
-        setupPeriodicTimeObserver()
-        setupPlayerDurationObserver()
+        self.setupAVAudioSession()
+
+        self.setupPeriodicTimeObserver()
+        self.setupPlayerDurationObserver()
         self.setupBinding()
     }
 
@@ -47,6 +50,16 @@ final class SongDetailsViewModel: ObservableObject {
         guard let url = URL(string: url) else { return }
         player = AVPlayer(url: url)
         player?.automaticallyWaitsToMinimizeStalling = false
+    }
+
+    private func setupAVAudioSession() {
+        do {
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            // TODO: Show Error Alert.
+            print("Failure to configure AVAudioSession: \(error)")
+        }
     }
 
     private func setupPeriodicTimeObserver() {

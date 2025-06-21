@@ -5,16 +5,12 @@
 //  Created by Jorge de Carvalho on 19/06/25.
 //
 
-struct ITunesSearchResponse: Codable {
-    let resultCount: Int
-    let results: [Song]
-}
-
 struct Song: Codable, Identifiable, Equatable, Hashable {
     let trackId: Int
     let artistId: Int
     let trackName: String
     let artistName: String
+    let collectionName: String
     let previewUrl: String
     var artworkLowQuality: String
     var artworkHighQuality: String {
@@ -32,6 +28,7 @@ struct Song: Codable, Identifiable, Equatable, Hashable {
         case artistId
         case trackName
         case artistName
+        case collectionName
         case previewUrl
         case artworkLowQuality = "artworkUrl100"
         case trackTimeMilliseconds = "trackTimeMillis"
