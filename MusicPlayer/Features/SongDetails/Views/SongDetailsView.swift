@@ -64,6 +64,32 @@ struct SongDetailsView: View {
                     }
                 }
             )
+            .onAppear {
+                let thumbImage = UIImage(systemName: "circle.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                UISlider.appearance().setThumbImage(thumbImage, for: .normal)
+
+                let trackHeight: CGFloat = 2
+
+                // ---- Minimum Track (ANTES da thumb) - Branco ----
+                let minSize = CGSize(width: 1, height: trackHeight)
+                UIGraphicsBeginImageContextWithOptions(minSize, false, 0.0)
+                UIColor.white.setFill()
+                UIRectFill(CGRect(origin: .zero, size: minSize))
+                let minTrackImage = UIGraphicsGetImageFromCurrentImageContext()
+                UIGraphicsEndImageContext()
+
+                // ---- Maximum Track (DEPOIS da thumb) - Cinza ----
+                UIGraphicsBeginImageContextWithOptions(minSize, false, 0.0)
+                UIColor.gray.setFill()  // Cor cinza
+                UIRectFill(CGRect(origin: .zero, size: minSize))
+                let maxTrackImage = UIGraphicsGetImageFromCurrentImageContext()
+                UIGraphicsEndImageContext()
+
+                if let minImage = minTrackImage, let maxImage = maxTrackImage {
+                    UISlider.appearance().setMinimumTrackImage(minImage.resizableImage(withCapInsets: .zero), for: .normal)
+                    UISlider.appearance().setMaximumTrackImage(maxImage.resizableImage(withCapInsets: .zero), for: .normal)
+                }
+            }
 
             HStack {
                 Text(viewModel.currentTime.formatTime())
