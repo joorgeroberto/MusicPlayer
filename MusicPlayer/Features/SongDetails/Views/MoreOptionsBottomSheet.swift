@@ -11,7 +11,7 @@ struct MoreOptionsBottomSheet: View {
     @State var song: Song
 
     var body: some View {
-        VStack(spacing: 42) {
+        VStack(alignment: .leading, spacing: 42) {
             VStack(alignment: .center, spacing: 14) {
                 Text(song.collectionName)
                     .font(.custom(.xLarge, .semibold))
@@ -20,8 +20,9 @@ struct MoreOptionsBottomSheet: View {
                 Text(song.artistName)
                     .font(.custom(.medium, .regular))
                     .foregroundColor(Color.Text.secondary)
-                    .multilineTextAlignment(.center) 
+                    .multilineTextAlignment(.center)
             }
+            .padding(.horizontal, 32)
 
             Button(action: {
 
@@ -36,7 +37,7 @@ struct MoreOptionsBottomSheet: View {
             })
 
         }
-        .padding(.horizontal, 32)
+        .padding(.horizontal, 0)
         .frame(maxWidth: .infinity, maxHeight: 300)
         .presentationDetents([.height(200)])
         .presentationDragIndicator(.visible)
