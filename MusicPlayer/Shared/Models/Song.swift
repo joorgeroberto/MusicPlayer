@@ -14,7 +14,7 @@ struct Song: Codable, Identifiable, Equatable, Hashable {
     let previewUrl: String
     var artworkLowQuality: String
     var artworkHighQuality: String {
-        artworkLowQuality.replacingImageSize(to: 600)
+        return setupArtworkHighQuality(size: 600)
     }
     let trackTimeMilliseconds: Double
     var trackTimeMinutesAndSeconds: String {
@@ -32,5 +32,15 @@ struct Song: Codable, Identifiable, Equatable, Hashable {
         case previewUrl
         case artworkLowQuality = "artworkUrl100"
         case trackTimeMilliseconds = "trackTimeMillis"
+    }
+}
+
+extension Song {
+    func setupArtworkHighQuality(size: Int = 600) -> String {
+        return artworkLowQuality.replacingOccurrences(
+            of: #"/\d+x\d+bb\.jpg"#,
+            with: "/\(size)x\(size)bb.jpg",
+            options: .regularExpression
+        )
     }
 }

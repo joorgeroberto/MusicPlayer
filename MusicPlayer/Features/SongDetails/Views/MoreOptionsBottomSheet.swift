@@ -11,7 +11,7 @@ struct MoreOptionsBottomSheet: View {
     @State var song: Song
 
     var body: some View {
-        VStack {
+        VStack(spacing: 42) {
             VStack(alignment: .center, spacing: 14) {
                 Text(song.collectionName)
                     .font(.custom(.xLarge, .semibold))
@@ -22,6 +22,19 @@ struct MoreOptionsBottomSheet: View {
                     .foregroundColor(Color.Text.secondary)
                     .multilineTextAlignment(.center) 
             }
+
+            Button(action: {
+
+            }, label: {
+                HStack(spacing: 16) {
+                    Image("ic-playlist")
+                        .frame(width: 24, height: 24)
+                    Text("Open album")
+                        .font(.custom(.large, .regular))
+                        .foregroundColor(Color.Text.primary)
+                }
+            })
+
         }
         .padding(.horizontal, 32)
         .frame(maxWidth: .infinity, maxHeight: 300)
