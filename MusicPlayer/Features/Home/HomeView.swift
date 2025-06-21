@@ -15,32 +15,38 @@ struct HomeView: View {
     }
 
     var body: some View {
-            NavigationView {
+            NavigationStack {
                 VStack(alignment: .leading) {
                     List(viewModel.songs, id: \.trackId) { song in
-                        VStack(alignment: .leading) {
-                            ListItem(song: song)
-                        }
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(
-                            .init(
-                                top: 8,
-                                leading: 16,
-                                bottom: 8,
-                                trailing: 16
+                        NavigationLink(value: song) {
+                            VStack(alignment: .leading) {
+                                ListItem(song: song)
+                            }
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(
+                                .init(
+                                    top: 8,
+                                    leading: 16,
+                                    bottom: 8,
+                                    trailing: 16
+                                )
                             )
-                        )
-                        .onAppear {
-                            if song == viewModel.songs.last {
-                                Task {
-                                    await viewModel.loadMore()
+                            .onAppear {
+                                if song == viewModel.songs.last {
+                                    Task { [viewModel] in
+                                        await viewModel.loadMore()
+                                    }
                                 }
                             }
                         }
+                        .listRowSeparator(.hidden)
                     }
                     .searchable(text: $viewModel.searchTerm, prompt: "Search")
                     .navigationTitle("Songs")
                     .listStyle(.plain)
+                    .navigationDestination(for: Song.self) { song in
+                        SongDetailsView(viewModel: SongDetailsViewModel(song: song))
+                    }
 
                     if viewModel.isLoadingMore {
                         HStack {
