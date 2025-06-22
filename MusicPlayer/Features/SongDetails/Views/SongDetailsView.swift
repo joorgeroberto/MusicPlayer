@@ -16,7 +16,9 @@ struct SongDetailsView: View {
 
     var body: some View {
         VStack {
-            SongDetailsHeader(showMoreOptionsBottomSheet: $viewModel.showMoreOptionsBottomSheet)
+            SongDetailsHeader(
+                showMoreOptionsBottomSheet: $viewModel.showMoreOptionsBottomSheet
+            )
 
             Spacer()
 
@@ -33,7 +35,12 @@ struct SongDetailsView: View {
             VStack(alignment: .leading, spacing: 16) {
                 SongDetails(song: viewModel.song)
 
-                CustomSlider
+                 PlaybackProgressSlider(
+                     currentTime: $viewModel.currentTime,
+                     duration: $viewModel.duration,
+                     player: $viewModel.player
+                 )
+
 
                 AudioPlayerButtons(
                     isPlaying: $viewModel.isPlaying
@@ -47,81 +54,29 @@ struct SongDetailsView: View {
         .padding(.leading, 12)
         .padding(.trailing, 12)
         .padding(.bottom, 25)
+        .id(viewModel.song.id)
         .onDisappear {
             viewModel.onDisappear()
         }
         .sheet(isPresented: $viewModel.showMoreOptionsBottomSheet) {
-            MoreOptionsBottomSheet(song: viewModel.song)
+            MoreOptionsBottomSheet(song: viewModel.song, onPressOpenAlbumButton: {
+                viewModel.onPressOpenAlbumButton()
+            })
         }
-    }
-
-    // TODO: Create Separate Component.
-    var CustomSlider: some View {
-        VStack(spacing: 4) {
-            Slider(
-                value: $viewModel.currentTime,
-                in: 0...29,
-                onEditingChanged: { isEditing in
-                    if !isEditing {
-                        viewModel.seek(to: viewModel.currentTime)
-                    }
-                }
+        .sheet(isPresented: $viewModel.showAlbumView) {
+            AlbumView(viewModel:
+                        AlbumViewModel(
+                            albumSongs: $viewModel.albumSongs,
+                            albumDetails: $viewModel.albumDetails,
+                            song: $viewModel.song
+                        )
             )
-            .onAppear {
-                let thumbImage = UIImage(systemName: "circle.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
-                UISlider.appearance().setThumbImage(thumbImage, for: .normal)
-
-                let trackHeight: CGFloat = 2
-
-                // ---- Minimum Track (BEFORE thumb) - White ----
-                let minSize = CGSize(width: 1, height: trackHeight)
-                UIGraphicsBeginImageContextWithOptions(minSize, false, 0.0)
-                UIColor.white.setFill()
-                UIRectFill(CGRect(origin: .zero, size: minSize))
-                let minTrackImage = UIGraphicsGetImageFromCurrentImageContext()
-                UIGraphicsEndImageContext()
-
-                // ---- Maximum Track (AFTER thumb) - Gray ----
-                UIGraphicsBeginImageContextWithOptions(minSize, false, 0.0)
-                UIColor.gray.setFill()  // Cor cinza
-                UIRectFill(CGRect(origin: .zero, size: minSize))
-                let maxTrackImage = UIGraphicsGetImageFromCurrentImageContext()
-                UIGraphicsEndImageContext()
-
-                if let minImage = minTrackImage, let maxImage = maxTrackImage {
-                    UISlider.appearance().setMinimumTrackImage(minImage.resizableImage(withCapInsets: .zero), for: .normal)
-                    UISlider.appearance().setMaximumTrackImage(maxImage.resizableImage(withCapInsets: .zero), for: .normal)
-                }
-            }
-
-            HStack {
-                Text(viewModel.currentTime.formatTime())
-                    .font(.custom(.medium, .regular))
-                    .foregroundColor(Color.Text.darkGray)
-
-                Spacer()
-
-                Text("-" + viewModel.duration.formatTime())
-                    .font(.custom(.medium, .regular))
-                    .foregroundColor(Color.Text.darkGray)
-            }
         }
     }
-
-    
 }
 
 #Preview {
-    let song = Song(
-        trackId: 1147165822,
-        artistId: 546381,
-        trackName: "Run to the Hills (2015 Remaster)",
-        artistName: "Iron Maiden",
-        collectionName: "The Number of the Beast (2015 Remaster)",
-        previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/dc/e0/95/dce09593-59e9-7887-4788-b7b0545ab441/mzaf_4833405911961268816.plus.aac.p.m4a",
-        artworkLowQuality:  "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg",
-        trackTimeMilliseconds: 233499
-    )
+    let song = Song.sample()
     SongDetailsView(viewModel: SongDetailsViewModel(song: song))
         .preferredColorScheme(.dark)
 }
