@@ -10,29 +10,74 @@ import SwiftUI
 import AVFoundation
 
 @MainActor
-final class SongDetailsViewModel: ObservableObject {
+class SongDetailsViewModel: ObservableObject {
     @Published var song: Song
+    @Published var albumSongs: [Song] = []
+    @Published var albumDetails: Album?
     @Published var player: AVPlayer?
     @Published var isPlaying = false
     @Published var showMoreOptionsBottomSheet: Bool = false
+    @Published var showAlbumView: Bool = false
 
     @Published var currentTime: Double = 0
     @Published var duration: Double = 29
     private var timeObserver: Any?
 
+    private let iTunesService: ITunesServiceProtocol
     private var cancellables = Set<AnyCancellable>()
 
-    init(song: Song) {
+    init(song: Song, iTunesService: ITunesServiceProtocol = ITunesService()) {
         self.song = song
-        self.setupAVPlayer(url: song.previewUrl)
+        self.iTunesService = iTunesService
+
         self.setupAVAudioSession()
 
-        self.setupPeriodicTimeObserver()
-        self.setupPlayerDurationObserver()
-        self.setupBinding()
+        self.bindSongChangesToPlayer()
+        self.setupIsPlayingObserver()
+        Task {
+            await self.fetchSongsAndDetailsFromAlbum()
+        }
     }
 
-    private func setupBinding() {
+    func onDisappear() {
+        self.player?.pause()
+        self.player = nil
+        self.removePeriodicTimeObserver()
+    }
+
+    func onPressOpenAlbumButton() {
+        showMoreOptionsBottomSheet = false
+        showAlbumView = true
+    }
+
+    func fetchSongsAndDetailsFromAlbum() async {
+        Task { @MainActor [iTunesService] in
+            do {
+                let response: ITunesSongsAndDetailsFromAlbumResponse = try await iTunesService.fetchSongsAndDetailsFromAlbum(withId: String(song.albumId))
+
+                var fetchedSongs: [Song] = []
+
+                for result in response.results {
+                    switch result {
+                    case .song(let song):
+                        fetchedSongs.append(song)
+                    case .album(let album):
+                        self.albumDetails = album
+                    }
+                }
+
+                self.albumSongs = fetchedSongs
+
+            } catch {
+                // TODO: Add Error Alert
+                print(error)
+            }
+        }
+    }
+}
+
+private extension SongDetailsViewModel {
+    private func setupIsPlayingObserver() {
         $isPlaying
             .removeDuplicates()
             .sink { [weak self] isPlaying in
@@ -42,6 +87,18 @@ final class SongDetailsViewModel: ObservableObject {
                 } else {
                     player?.pause()
                 }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func bindSongChangesToPlayer() {
+        $song
+            .removeDuplicates()
+            .sink { [weak self] song in
+                self?.currentTime = 0
+                self?.setupAVPlayer(url: song.previewUrl)
+                self?.setupPeriodicTimeObserver()
+                self?.setupPlayerDurationObserver()
             }
             .store(in: &cancellables)
     }
@@ -88,17 +145,6 @@ final class SongDetailsViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-    }
-
-    func seek(to seconds: Double) {
-        let targetTime = CMTime(seconds: seconds, preferredTimescale: 600)
-        player?.seek(to: targetTime)
-    }
-
-    func onDisappear() {
-        self.player?.pause()
-        self.player = nil
-        self.removePeriodicTimeObserver()
     }
 
     private func removePeriodicTimeObserver() {

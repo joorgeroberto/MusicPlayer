@@ -28,8 +28,11 @@ extension Font {
 
         var swiftUIFontWeight: Font.Weight {
             switch self {
+            /// 500
             case .regular: return .regular
+            /// 600
             case .semibold: return .semibold
+            /// 700
             case .bold: return .bold
             }
         }

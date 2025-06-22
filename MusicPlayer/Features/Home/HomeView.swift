@@ -23,14 +23,6 @@ struct HomeView: View {
                                 ListItem(song: song)
                             }
                             .listRowSeparator(.hidden)
-                            .listRowInsets(
-                                .init(
-                                    top: 8,
-                                    leading: 16,
-                                    bottom: 8,
-                                    trailing: 16
-                                )
-                            )
                             .onAppear {
                                 if song == viewModel.songs.last {
                                     Task { [viewModel] in
@@ -39,6 +31,7 @@ struct HomeView: View {
                                 }
                             }
                         }
+                        .listRowInsets(EdgeInsets())
                         .listRowSeparator(.hidden)
                     }
                     .searchable(text: $viewModel.searchTerm, prompt: "Search")
@@ -61,6 +54,14 @@ struct HomeView: View {
         }
 }
 
-#Preview {
+#Preview("Empty State") {
     HomeView()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Populated") {
+    let viewModel = HomeViewModel()
+    viewModel.searchTerm = Song.sample().artistName
+    return HomeView(viewModel: viewModel)
+        .preferredColorScheme(.dark)
 }
