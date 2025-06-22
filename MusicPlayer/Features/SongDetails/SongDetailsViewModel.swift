@@ -16,6 +16,10 @@ class SongDetailsViewModel: ObservableObject {
     @Published var albumDetails: Album?
     @Published var player: AVPlayer?
     @Published var isPlaying = false
+
+    @Published var isForwardButtonAvailable = false
+    @Published var isBackwardButtonAvailable = false
+
     @Published var showMoreOptionsBottomSheet: Bool = false
     @Published var showAlbumView: Bool = false
 
@@ -40,14 +44,18 @@ class SongDetailsViewModel: ObservableObject {
     }
 
     func onDisappear() {
-        self.player?.pause()
-        self.player = nil
-        self.removePeriodicTimeObserver()
+        cancellables.removeAll()
+        self.resetPlayer()
     }
 
     func onPressOpenAlbumButton() {
         showMoreOptionsBottomSheet = false
         showAlbumView = true
+    }
+
+    func onSeek(to seconds: Double) {
+        let targetTime = CMTime(seconds: seconds, preferredTimescale: 600)
+        player?.seek(to: targetTime)
     }
 
     func fetchSongsAndDetailsFromAlbum() async {
@@ -66,6 +74,7 @@ class SongDetailsViewModel: ObservableObject {
                     }
                 }
 
+                fetchedSongs.sort { ($0.trackNumber) < ($1.trackNumber) }
                 self.albumSongs = fetchedSongs
 
             } catch {
@@ -76,8 +85,27 @@ class SongDetailsViewModel: ObservableObject {
     }
 }
 
+// MARK: AudioPlayerButtons Functions
+extension SongDetailsViewModel {
+    func onBackward() {
+        let isFirstSong = song.trackNumber == 1
+        if !isFirstSong {
+            resetPlayer()
+            song = albumSongs.first(where: { $0.trackNumber == song.trackNumber - 1 }) ?? song
+        }
+    }
+
+    func onForward() {
+        let isLastSong = song.trackNumber == albumDetails?.trackCount
+        if !isLastSong {
+            resetPlayer()
+            song = albumSongs.first(where: { $0.trackNumber == song.trackNumber + 1 }) ?? song
+        }
+    }
+}
+
 private extension SongDetailsViewModel {
-    private func setupIsPlayingObserver() {
+    func setupIsPlayingObserver() {
         $isPlaying
             .removeDuplicates()
             .sink { [weak self] isPlaying in
@@ -91,25 +119,34 @@ private extension SongDetailsViewModel {
             .store(in: &cancellables)
     }
 
-    private func bindSongChangesToPlayer() {
+    func bindSongChangesToPlayer() {
         $song
             .removeDuplicates()
             .sink { [weak self] song in
-                self?.currentTime = 0
+                self?.resetPlayer()
                 self?.setupAVPlayer(url: song.previewUrl)
                 self?.setupPeriodicTimeObserver()
                 self?.setupPlayerDurationObserver()
+                self?.updateAudioPlayerButtonsAvailability(song: song)
             }
             .store(in: &cancellables)
     }
 
-    private func setupAVPlayer(url: String) {
+    func updateAudioPlayerButtonsAvailability(song: Song) {
+        let isLastSong = song.trackNumber == self.albumDetails?.trackCount
+        self.isForwardButtonAvailable = !isLastSong
+
+        let isFirstSong = song.trackNumber == 1
+        self.isBackwardButtonAvailable = !isFirstSong
+    }
+
+    func setupAVPlayer(url: String) {
         guard let url = URL(string: url) else { return }
         player = AVPlayer(url: url)
         player?.automaticallyWaitsToMinimizeStalling = false
     }
 
-    private func setupAVAudioSession() {
+    func setupAVAudioSession() {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
             try AVAudioSession.sharedInstance().setActive(true)
@@ -119,7 +156,7 @@ private extension SongDetailsViewModel {
         }
     }
 
-    private func setupPeriodicTimeObserver() {
+    func setupPeriodicTimeObserver() {
         guard let player = player else { return }
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
 
@@ -134,7 +171,7 @@ private extension SongDetailsViewModel {
         }
     }
 
-    private func setupPlayerDurationObserver() {
+    func setupPlayerDurationObserver() {
         player?.currentItem?.publisher(for: \.status, options: [.initial, .new])
             .sink { [weak self] status in
                 guard let self = self else { return }
@@ -147,12 +184,18 @@ private extension SongDetailsViewModel {
             .store(in: &cancellables)
     }
 
-    private func removePeriodicTimeObserver() {
-//        guard let timeObserver = timeObserver else { return }
-//        self.player?.removeTimeObserver(timeObserver)
-//        self.timeObserver = nil
+    func removePeriodicTimeObserver() {
         if let observer = timeObserver {
             player?.removeTimeObserver(observer)
         }
+    }
+
+    func resetPlayer() {
+        self.currentTime = 0
+        self.onSeek(to: 0)
+        self.isPlaying = false
+        self.player?.pause()
+        self.player = nil
+        self.removePeriodicTimeObserver()
     }
 }

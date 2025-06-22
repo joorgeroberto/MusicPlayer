@@ -27,6 +27,7 @@ struct Song: Codable, Identifiable, Equatable, Hashable, ArtworkUpgradable {
     let trackId: Int
     let artistId: Int
     let trackName: String
+    let trackNumber: Int
     let artistName: String
     let albumId: Int
     let albumName: String
@@ -43,6 +44,7 @@ struct Song: Codable, Identifiable, Equatable, Hashable, ArtworkUpgradable {
         case trackId
         case artistId
         case trackName
+        case trackNumber
         case artistName
         case albumId = "collectionId"
         case albumName = "collectionName"
@@ -68,6 +70,7 @@ extension Song {
             trackId: trackId,
             artistId: artistId,
             trackName: trackName,
+            trackNumber: 6,
             artistName: artistName,
             albumId: albumId,
             albumName: albumName,
