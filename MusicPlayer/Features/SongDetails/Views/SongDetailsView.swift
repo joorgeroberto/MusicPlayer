@@ -33,7 +33,7 @@ struct SongDetailsView: View {
             Spacer()
 
             VStack(alignment: .leading, spacing: 16) {
-                SongDetails(song: viewModel.song)
+                SongTitleAndArtist(song: viewModel.song)
 
                  PlaybackProgressSlider(
                      currentTime: $viewModel.currentTime,
