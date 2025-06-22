@@ -12,7 +12,7 @@ struct MoreOptionsBottomSheet: View {
     let onPressOpenAlbumButton: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 42) {
+        VStack(alignment: .center, spacing: 42) {
             VStack(alignment: .center, spacing: 14) {
                 Text(song.albumName)
                     .font(.custom(.xLarge, .semibold))
@@ -34,20 +34,29 @@ struct MoreOptionsBottomSheet: View {
                     Text("Open album")
                         .font(.custom(.large, .regular))
                         .foregroundColor(Color.Text.primary)
+                    Spacer()
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             })
+            .padding(.horizontal, 32)
 
         }
         .padding(.horizontal, 0)
         .frame(maxWidth: .infinity, maxHeight: 300)
-        .presentationDetents([.height(200)])
+        .presentationDetents([.height(187)])
         .presentationDragIndicator(.visible)
-
     }
 }
 
-#Preview {
+#Preview("Long Title"){
     let song = Song.sample()
     MoreOptionsBottomSheet(song: song, onPressOpenAlbumButton: {})
         .preferredColorScheme(.dark)
 }
+
+#Preview("Short Title") {
+    let song = Song.sample(albumName: "Born to Die")
+    MoreOptionsBottomSheet(song: song, onPressOpenAlbumButton: {})
+        .preferredColorScheme(.dark)
+}
+
