@@ -1,5 +1,5 @@
 //
-//  TrackDetails.swift
+//  SongTitleAndArtist.swift
 //  MusicPlayer
 //
 //  Created by Jorge de Carvalho on 20/06/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SongDetails: View {
+struct SongTitleAndArtist: View {
     @State var song: Song
 
     var body: some View {
