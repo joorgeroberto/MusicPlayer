@@ -37,14 +37,21 @@ struct SongDetailsView: View {
 
                  PlaybackProgressSlider(
                      currentTime: $viewModel.currentTime,
-                     duration: $viewModel.duration,
-                     player: $viewModel.player
-                 )
-
+                     duration: $viewModel.duration, onSeek: { targetTime in
+                             viewModel.onSeek(to: targetTime)
+                     })
 
                 AudioPlayerButtons(
-                    isPlaying: $viewModel.isPlaying
-                )
+                    isPlaying: $viewModel.isPlaying,
+                    isBackwardButtonAvailable: $viewModel.isBackwardButtonAvailable,
+                    isForwardButtonAvailable: $viewModel.isForwardButtonAvailable,
+                    onBackward: {
+                        viewModel.onBackward()
+                    }, onForward: {
+                        viewModel.onForward()
+                    })
+
+
             }
             .padding(.leading, 20)
             .padding(.trailing, 20)
