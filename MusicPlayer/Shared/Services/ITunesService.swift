@@ -9,6 +9,7 @@ import SwiftUI
 
 protocol ITunesServiceProtocol {
     func fetchMusicList(term: String, offset: Int, limit: Int) async throws -> ITunesSearchResponse
+    func fetchSongsAndDetailsFromAlbum(withId id: String) async throws -> ITunesSongsAndDetailsFromAlbumResponse
 }
 
 final class ITunesService: ITunesServiceProtocol {
@@ -28,6 +29,23 @@ final class ITunesService: ITunesServiceProtocol {
         ]
 
         var urlComponents = URLComponents(string: baseURL + "/search")!
+        urlComponents.queryItems = queryItems
+
+        guard let url = urlComponents.url else {
+            throw URLError(.badURL)
+        }
+
+        return try await networkManager.fetch(url: url)
+    }
+
+    func fetchSongsAndDetailsFromAlbum(withId id: String) async throws -> ITunesSongsAndDetailsFromAlbumResponse {
+        let queryItems = [
+            URLQueryItem(name: "id", value: id),
+            URLQueryItem(name: "media", value: "music"),
+            URLQueryItem(name: "entity", value: "song")
+        ]
+
+        var urlComponents = URLComponents(string: baseURL + "/lookup")!
         urlComponents.queryItems = queryItems
 
         guard let url = urlComponents.url else {
