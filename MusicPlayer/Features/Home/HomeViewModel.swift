@@ -13,6 +13,8 @@ class HomeViewModel: ObservableObject {
     @Published var searchTerm = ""
     @Published var songs: [Song] = []
     @Published private(set) var isLoadingMore = false
+    @Published var errorAlertMessage  = ""
+    @Published var isErrorAlertPresented = false
 
     private let iTunesService: ITunesServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -56,6 +58,7 @@ class HomeViewModel: ObservableObject {
                 offset += limit
             } catch {
                 // TODO: Add Error Alert
+                showErrorAlert()
             }
         }
     }
@@ -78,7 +81,13 @@ class HomeViewModel: ObservableObject {
                 offset += limit
             } catch {
                 // TODO: Add Error Alert
+                showErrorAlert()
             }
         }
+    }
+
+    private func showErrorAlert() {
+        errorAlertMessage = "Please try again!"
+        isErrorAlertPresented = true
     }
 }
