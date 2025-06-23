@@ -31,8 +31,6 @@ struct AlbumView: View {
                             dismiss()
                         } label: {
                             SongListRow(song: song)
-                                .background(Color.clear)
-                                .contentShape(Rectangle())
                         }
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets())

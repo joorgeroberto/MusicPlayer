@@ -12,7 +12,9 @@ import SwiftUI
 class HomeViewModel: ErrorAlertViewModel {
     @Published var searchTerm = ""
     @Published var songs: [Song] = []
+    @Published var selectedSong: Song?
     @Published private(set) var isLoadingMore = false
+    @Published private(set) var isFetchingMusicList = false
 
     private let iTunesService: ITunesServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -25,18 +27,17 @@ class HomeViewModel: ErrorAlertViewModel {
         self.setupSearchDebounce()
     }
 
-    private func setupSearchDebounce() {
-        $searchTerm
-            .debounce(for: .seconds(1), scheduler: RunLoop.main)
-            .removeDuplicates()
-            .sink { [weak self] _ in
-                Task {
-                    await self?.fetchMusicList()
-                }
-            }
-            .store(in: &cancellables)
+    func showEmptyState() -> Bool {
+        return searchTerm.isEmpty
     }
 
+    func showProgressView() -> Bool {
+        return songs.isEmpty && isFetchingMusicList
+    }
+}
+
+// MARK: API Calls
+extension HomeViewModel {
     func loadMore() async {
         guard !isLoadingMore, !searchTerm.isEmpty else { return }
 
@@ -56,18 +57,21 @@ class HomeViewModel: ErrorAlertViewModel {
                 songs.append(contentsOf: filteredSongs)
                 offset += limit
             } catch {
+                searchTerm = ""
                 showErrorAlert()
             }
         }
     }
 
     func fetchMusicList() async {
-        guard !searchTerm.isEmpty else {
+        guard !isFetchingMusicList, !searchTerm.isEmpty else {
             songs = []
             return
         }
 
         Task { @MainActor [iTunesService] in
+            isFetchingMusicList = true
+            defer { isFetchingMusicList = false }
             offset = 0
             do {
                 let response: ITunesSearchResponse = try await iTunesService.fetchMusicList(
@@ -78,8 +82,24 @@ class HomeViewModel: ErrorAlertViewModel {
                 songs = response.results
                 offset += limit
             } catch {
+                searchTerm = ""
                 showErrorAlert()
             }
         }
+    }
+}
+
+// MARK: Private functions
+private extension HomeViewModel {
+    func setupSearchDebounce() {
+        $searchTerm
+            .debounce(for: .seconds(1), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                Task {
+                    await self?.fetchMusicList()
+                }
+            }
+            .store(in: &cancellables)
     }
 }
