@@ -6,20 +6,18 @@
 //
 
 import SwiftUI
-import Foundation
-import XCTest
 @testable import MusicPlayer
 
 final class URLSessionSpy: URLSessionProtocol {
     var dataCallCount = 0
     var dataToBeReturned: Data?
     var responseToBeReturned: URLResponse?
-    var errorToBeReturned: Error?
+    var errorToThrow: Error?
 
     func data(from url: URL) async throws -> (Data, URLResponse) {
         dataCallCount += 1
 
-        if let error = errorToBeReturned {
+        if let error = errorToThrow {
             throw error
         }
 

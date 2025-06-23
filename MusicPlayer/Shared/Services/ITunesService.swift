@@ -14,10 +14,14 @@ protocol ITunesServiceProtocol {
 
 final class ITunesService: ITunesServiceProtocol {
     private let networkManager: NetworkManagerProtocol
-    private let baseURL = "https://itunes.apple.com"
+    private let baseURL: String
 
-    init(networkManager: NetworkManagerProtocol = NetworkManager()) {
+    init(
+        networkManager: NetworkManagerProtocol = NetworkManager(),
+        baseURL: String = "https://itunes.apple.com"
+    ) {
         self.networkManager = networkManager
+        self.baseURL = baseURL
     }
 
     func fetchMusicList(term: String, offset: Int = 0, limit: Int = 50) async throws -> ITunesSearchResponse {
