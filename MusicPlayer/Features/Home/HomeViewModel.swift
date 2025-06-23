@@ -9,12 +9,10 @@ import Combine
 import SwiftUI
 
 @MainActor
-class HomeViewModel: ObservableObject {
+class HomeViewModel: ErrorAlertViewModel {
     @Published var searchTerm = ""
     @Published var songs: [Song] = []
     @Published private(set) var isLoadingMore = false
-    @Published var errorAlertMessage  = ""
-    @Published var isErrorAlertPresented = false
 
     private let iTunesService: ITunesServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -23,6 +21,7 @@ class HomeViewModel: ObservableObject {
 
     init(iTunesService: ITunesServiceProtocol = ITunesService()) {
         self.iTunesService = iTunesService
+        super.init()
         self.setupSearchDebounce()
     }
 
@@ -57,7 +56,6 @@ class HomeViewModel: ObservableObject {
                 songs.append(contentsOf: filteredSongs)
                 offset += limit
             } catch {
-                // TODO: Add Error Alert
                 showErrorAlert()
             }
         }
@@ -80,14 +78,8 @@ class HomeViewModel: ObservableObject {
                 songs = response.results
                 offset += limit
             } catch {
-                // TODO: Add Error Alert
                 showErrorAlert()
             }
         }
-    }
-
-    private func showErrorAlert() {
-        errorAlertMessage = "Please try again!"
-        isErrorAlertPresented = true
     }
 }

@@ -20,7 +20,7 @@ struct HomeView: View {
                 List(viewModel.songs, id: \.trackId) { song in
                     NavigationLink(value: song) {
                         VStack(alignment: .leading) {
-                            ListItem(song: song)
+                            SongListRow(song: song)
                         }
                         .listRowSeparator(.hidden)
                         .onAppear {
