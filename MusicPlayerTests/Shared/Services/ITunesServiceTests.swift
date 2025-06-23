@@ -89,7 +89,7 @@ import Testing
 
             // When
             do {
-                response = try await sut.fetchSongsAndDetailsFromAlbum(withId: String(Song.sample().albumId))
+                response = try await sut.fetchSongsAndDetailsFromAlbum(withId: String(Song.sample().albumId ?? 1))
             } catch {
                 expectedError = error as? URLError
             }
@@ -121,7 +121,7 @@ import Testing
 
             // When
             do {
-                _ = try await sut.fetchSongsAndDetailsFromAlbum(withId: String(Song.sample().albumId))
+                _ = try await sut.fetchSongsAndDetailsFromAlbum(withId: String(Song.sample().albumId ?? 1))
             } catch {
                 expectedError = error as? URLError
             }
