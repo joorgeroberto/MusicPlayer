@@ -33,6 +33,7 @@ extension Album {
     }
 }
 
+// MARK: Fixture
 extension Album {
     static func sample(
         artistId: Int = 1147165685,
