@@ -17,28 +17,14 @@ struct HomeView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading) {
-                List(viewModel.songs, id: \.trackId) { song in
-                    NavigationLink(value: song) {
-                        VStack(alignment: .leading) {
-                            SongListRow(song: song)
-                        }
-                        .listRowSeparator(.hidden)
-                        .onAppear {
-                            if song == viewModel.songs.last {
-                                Task { [viewModel] in
-                                    await viewModel.loadMore()
-                                }
-                            }
-                        }
+                Group {
+                    if viewModel.showEmptyState() {
+                        EmptyState
+                    } else if viewModel.showProgressView() {
+                        ProgressView
+                    } else {
+                        SongList
                     }
-                    .listRowInsets(EdgeInsets())
-                    .listRowSeparator(.hidden)
-                }
-                .searchable(text: $viewModel.searchTerm, prompt: "Search")
-                .navigationTitle("Songs")
-                .listStyle(.plain)
-                .navigationDestination(for: Song.self) { song in
-                    SongDetailsView(viewModel: SongDetailsViewModel(song: song))
                 }
                 .alert("Something went wrong...", isPresented: $viewModel.isErrorAlertPresented) {
                     Button("OK", role: .cancel) { }
@@ -49,12 +35,61 @@ struct HomeView: View {
                 if viewModel.isLoadingMore {
                     HStack {
                         Spacer()
-                        ProgressView()
+                        SwiftUI.ProgressView()
                             .padding()
                         Spacer()
                     }
                 }
             }
+            .searchable(text: $viewModel.searchTerm, prompt: "Search")
+            .navigationTitle("Songs")
+        }
+    }
+
+    private var EmptyState: some View {
+        Group {
+            Spacer()
+            Text("Start typing to search for songs.")
+                .foregroundColor(.gray)
+                .font(.custom(.xLarge, .regular))
+                .multilineTextAlignment(.center)
+                .padding()
+            Spacer()
+        }
+    }
+
+    private var ProgressView: some View {
+        Group {
+            Spacer()
+            SwiftUI.ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(1.5)
+            Spacer()
+        }
+    }
+
+    private var SongList: some View {
+        List(viewModel.songs, id: \.trackId) { song in
+            VStack(alignment: .leading) {
+                SongListRow(song: song)
+            }
+            .listRowSeparator(.hidden)
+            .onAppear {
+                if song == viewModel.songs.last {
+                    Task { [viewModel] in
+                        await viewModel.loadMore()
+                    }
+                }
+            }
+            .onTapGesture {
+                viewModel.selectedSong = song
+            }
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+        }
+        .listStyle(.plain)
+        .navigationDestination(item: $viewModel.selectedSong) { song in
+            SongDetailsView(viewModel: SongDetailsViewModel(song: song))
         }
     }
 }

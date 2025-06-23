@@ -26,6 +26,8 @@ struct SongListRow: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
+        .background(Color.clear)
+        .contentShape(Rectangle())
     }
 }
 
