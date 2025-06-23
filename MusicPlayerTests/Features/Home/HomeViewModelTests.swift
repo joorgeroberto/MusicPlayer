@@ -1,0 +1,230 @@
+//
+//  HomeViewModelTests.swift
+//  MusicPlayer
+//
+//  Created by Jorge de Carvalho on 23/06/25.
+//
+
+import SwiftUI
+import Testing
+@testable import MusicPlayer
+
+@Suite("HomeViewModelTests Tests") struct HomeViewModelTests {
+    @MainActor
+    @Suite("showEmptyState() Tests") struct showEmptyState {
+        let iTunesServiceSpy = ITunesServiceSpy()
+        lazy var sut: HomeViewModel = {
+            return HomeViewModel(iTunesService: iTunesServiceSpy)
+        }()
+
+        @Test mutating func GivenPopulatedSearchTerm_WhenShowEmptyStateFunctionIsCalled_ThenShowEmptyStateFunctionShouldReturnFalse() {
+            // Given
+            sut.searchTerm = "Search Term"
+
+            // When
+            let showEmptyState = sut.showEmptyState()
+
+            // Then
+            #expect(showEmptyState == false)
+        }
+
+        @Test mutating func GivenEmptySearchTerm_WhenShowEmptyStateFunctionIsCalled_ThenShowEmptyStateFunctionShouldReturnTrue() {
+            // Given
+            sut.searchTerm = ""
+
+            // When
+            let showEmptyState = sut.showEmptyState()
+
+            // Then
+            #expect(showEmptyState)
+        }
+    }
+
+    @MainActor
+    @Suite("showProgressView() Tests") struct showProgressView {
+        let iTunesServiceSpy = ITunesServiceSpy()
+        lazy var sut: HomeViewModel = {
+            return HomeViewModel(iTunesService: iTunesServiceSpy)
+        }()
+
+        @Test("Empty Songs array and if is NOT fetching Music List, should return false.")
+        mutating func GivenEmptySongsArrayAndIsNotFetchingMusicList_WhenShowProgressViewFunctionIsCalled_ThenShowEmptyStateFunctionShouldReturnFalse() {
+            // Given
+            sut.isFetchingMusicList = false
+            sut.songs = []
+
+            // When
+            let showProgressView = sut.showProgressView()
+
+            // Then
+            #expect(showProgressView == false)
+        }
+
+        @Test("Empty Songs array and if is fetching Music List, should return true.")
+        mutating func GivenEmptySongsArrayAndIsFetchingMusicList_WhenShowProgressViewFunctionIsCalled_ThenShowEmptyStateFunctionShouldReturnTrue() {
+            // Given
+            sut.isFetchingMusicList = true
+            sut.songs = []
+
+            // When
+            let showProgressView = sut.showProgressView()
+
+            // Then
+            #expect(showProgressView)
+        }
+
+        @Test("Populated Songs array and if is fetching Music List, should return false.")
+        mutating func GivenPopulatedSongsArrayAndIsFetchingMusicList_WhenShowProgressViewFunctionIsCalled_ThenShowEmptyStateFunctionShouldReturnFalse() {
+            // Given
+            sut.isFetchingMusicList = true
+            sut.songs = [Song.sample()]
+
+            // When
+            let showProgressView = sut.showProgressView()
+
+            // Then
+            #expect(showProgressView == false)
+        }
+
+        @Test("Populated Songs array and if is NOT fetching Music List, should return false.")
+        mutating func GivenPopulatedSongsArrayAndIsNotFetchingMusicList_WhenShowProgressViewFunctionIsCalled_ThenShowEmptyStateFunctionShouldReturnFalse() {
+            // Given
+            sut.isFetchingMusicList = true
+            sut.songs = [Song.sample()]
+
+            // When
+            let showProgressView = sut.showProgressView()
+
+            // Then
+            #expect(showProgressView == false)
+        }
+    }
+
+
+    @Suite("fetchMusicList() Tests") struct fetchMusicList {
+        @MainActor
+        @Suite struct Success {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            lazy var sut: HomeViewModel = {
+                return HomeViewModel(iTunesService: iTunesServiceSpy)
+            }()
+
+            @Test("Clears songs and skips network request when search term is empty and not currently fetching.")
+            mutating func GivenEmptySearchTermAndIsNotFetchingMusicList_WhenFetchMusicListIsCalled_ThenSongsArrayShouldBeClearedAndNoRequestMade() async {
+                // Given
+                sut.searchTerm = ""
+                sut.isFetchingMusicList = false
+                sut.songs = [Song.sample()]
+
+                // When
+                _ = await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 0)
+            }
+
+
+            @Test("Should clear songs and skip network request when search term is empty and is already fetching.")
+            mutating func GivenEmptySearchTermAndIsFetchingMusicList_WhenFetchMusicListIsCalled_ThenSongsArrayShouldBeClearedAndNoRequestMade() async {
+                // Given
+                sut.searchTerm = ""
+                sut.isFetchingMusicList = true
+                sut.songs = [Song.sample()]
+
+                // When
+                _ = await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 0)
+            }
+
+            @Test("Should clear songs and skip network request when search term is valid and is already fetching.")
+            mutating func GivenPopulatedSearchTermAndIsFetchingMusicList_WhenFetchMusicListIsCalled_ThenSongsArrayShouldBeClearedAndNoRequestMade() async {
+                // Given
+                sut.searchTerm = "Search Term"
+                sut.isFetchingMusicList = true
+                sut.songs = [Song.sample()]
+
+                // When
+                _ = await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 0)
+            }
+
+            @Test("Given populated search term and not fetching music list, when fetchMusicList is called and service returns success, then songs array and offset should be updated.")
+            mutating func GivenPopulatedSearchTermAndNotFetchingMusicList_WhenFetchMusicListReturnsSuccess_ThenSongsAndOffsetAreUpdated() async {
+                // Given
+                let expectedResponse = ITunesSearchResponse(
+                    resultCount: 1,
+                    results: [Song.sample()]
+                )
+                let expectedSearchTerm = "Search Term"
+                let expectedOffset = 50
+
+                iTunesServiceSpy.fetchMusicListResult = .success(expectedResponse)
+                sut = HomeViewModel(iTunesService: iTunesServiceSpy)
+                sut.searchTerm = expectedSearchTerm
+                sut.isFetchingMusicList = false
+                sut.songs = []
+
+                // When
+                await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.count == 1)
+                #expect(sut.offset == expectedOffset)
+                #expect(iTunesServiceSpy.capturedTerm == expectedSearchTerm)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
+            }
+        }
+
+        @MainActor
+        @Suite struct Failure {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            lazy var sut: HomeViewModel = {
+                return HomeViewModel(iTunesService: iTunesServiceSpy)
+            }()
+
+            @Test("Given populated search term and not fetching music list, when fetchMusicList is called and service returns error, then songs array and offset should not be updated and .")
+            mutating func GivenPopulatedSearchTermAndNotFetchingMusicList_WhenFetchMusicListReturnsError_ThenSongsAndOffsetShouldNotUpdatedSearchTermShouldBeEmptyAndShowErrorAlertShouldBeShown() async {
+                // Given
+                let expectedOffset = 0
+                iTunesServiceSpy.fetchMusicListResult = .failure(URLError(.badServerResponse))
+                sut = HomeViewModel(iTunesService: iTunesServiceSpy)
+                sut.searchTerm = "Search Term"
+                sut.isFetchingMusicList = false
+                sut.songs = []
+
+                // When
+                await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(sut.offset == expectedOffset)
+                #expect(sut.searchTerm.isEmpty)
+                #expect(sut.isErrorAlertPresented)
+
+                #expect(iTunesServiceSpy.capturedOffset == expectedOffset)
+                #expect(iTunesServiceSpy.capturedOffset == 0)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
+            }
+        }
+    }
+
+//    @Suite("showErrorAlert() Tests") struct fetchMusicList {
+//
+//        @Suite struct Success {
+//            @Test func Given_When_Then() {
+//                // Given
+//                // When
+//                // Then
+//            }
+//        }
+//
+//        @Suite struct Failure {}
+//    }
+}

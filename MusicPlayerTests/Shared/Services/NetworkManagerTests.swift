@@ -11,6 +11,7 @@ import Testing
 
 @Suite("Network Manager Tests") struct NetworkManagerTests {
     @Suite("fetch() Tests") struct fetch {
+        @MainActor
         @Suite struct Success {
             let url = URL(string: "http://example.com")!
             let expectedSong = Song.sample()
@@ -37,6 +38,7 @@ import Testing
             }
         }
 
+        @MainActor
         @Suite struct Failure {
             let url = URL(string: "http://example.com")!
             let expectedSong = Song.sample()
