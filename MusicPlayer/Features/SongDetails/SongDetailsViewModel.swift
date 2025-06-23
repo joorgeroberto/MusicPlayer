@@ -10,7 +10,7 @@ import SwiftUI
 import AVFoundation
 
 @MainActor
-class SongDetailsViewModel: ObservableObject {
+class SongDetailsViewModel: ErrorAlertViewModel {
     @Published var song: Song
     @Published var albumSongs: [Song] = []
     @Published var albumDetails: Album?
@@ -33,6 +33,8 @@ class SongDetailsViewModel: ObservableObject {
     init(song: Song, iTunesService: ITunesServiceProtocol = ITunesService()) {
         self.song = song
         self.iTunesService = iTunesService
+
+        super.init()
 
         self.setupAVAudioSession()
 
@@ -76,10 +78,8 @@ class SongDetailsViewModel: ObservableObject {
 
                 fetchedSongs.sort { ($0.trackNumber) < ($1.trackNumber) }
                 self.albumSongs = fetchedSongs
-
             } catch {
-                // TODO: Add Error Alert
-                print(error)
+                showErrorAlert()
             }
         }
     }
@@ -155,7 +155,7 @@ private extension SongDetailsViewModel {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
             try AVAudioSession.sharedInstance().setActive(true)
         } catch {
-            // TODO: Show Error Alert.
+            showErrorAlert()
             print("Failure to configure AVAudioSession: \(error)")
         }
     }

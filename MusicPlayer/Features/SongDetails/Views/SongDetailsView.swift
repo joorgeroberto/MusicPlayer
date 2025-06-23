@@ -79,6 +79,11 @@ struct SongDetailsView: View {
                         )
             )
         }
+        .alert("Something went wrong...", isPresented: $viewModel.isErrorAlertPresented) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorAlertMessage)
+        }
     }
 }
 

@@ -30,7 +30,7 @@ struct AlbumView: View {
                             viewModel.onSelectSong(song: song)
                             dismiss()
                         } label: {
-                            ListItem(song: song)
+                            SongListRow(song: song)
                                 .background(Color.clear)
                                 .contentShape(Rectangle())
                         }
