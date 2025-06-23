@@ -61,9 +61,12 @@ class SongDetailsViewModel: ErrorAlertViewModel {
     }
 
     func fetchSongsAndDetailsFromAlbum() async {
+        guard let albumId = song.albumId else {
+            return
+        }
         Task { @MainActor [iTunesService] in
             do {
-                let response: ITunesSongsAndDetailsFromAlbumResponse = try await iTunesService.fetchSongsAndDetailsFromAlbum(withId: String(song.albumId))
+                let response: ITunesSongsAndDetailsFromAlbumResponse = try await iTunesService.fetchSongsAndDetailsFromAlbum(withId: String(albumId))
 
                 var fetchedSongs: [Song] = []
 
@@ -98,7 +101,7 @@ extension SongDetailsViewModel {
     }
 
     func onForward() {
-        let isLastSong = song.trackNumber == albumDetails?.trackCount
+        let isLastSong = song.trackNumber == song.albumTrackCount
         if !isLastSong {
             resetPlayer()
             if let nextSong = albumSongs.first(where: { $0.trackNumber == song.trackNumber + 1 }) {
@@ -137,11 +140,13 @@ private extension SongDetailsViewModel {
     }
 
     func updateAudioPlayerButtonsAvailability(song: Song) {
-        let isLastSong = song.trackNumber == self.albumDetails?.trackCount
-        self.isForwardButtonAvailable = !isLastSong
+        let isAlbumAvailable = song.albumId != nil && song.albumName != nil
+
+        let isLastSong = song.trackNumber == song.albumTrackCount
+        self.isForwardButtonAvailable = !isLastSong && isAlbumAvailable
 
         let isFirstSong = song.trackNumber == 1
-        self.isBackwardButtonAvailable = !isFirstSong
+        self.isBackwardButtonAvailable = !isFirstSong && isAlbumAvailable
     }
 
     func setupAVPlayer(url: String) {

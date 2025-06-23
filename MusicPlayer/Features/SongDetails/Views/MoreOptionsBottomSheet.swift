@@ -14,7 +14,7 @@ struct MoreOptionsBottomSheet: View {
     var body: some View {
         VStack(alignment: .center, spacing: 42) {
             VStack(alignment: .center, spacing: 14) {
-                Text(song.albumName)
+                Text(song.albumName ?? song.artistName)
                     .font(.custom(.xLarge, .semibold))
                     .foregroundColor(Color.Text.primary)
                     .multilineTextAlignment(.center)
@@ -37,14 +37,23 @@ struct MoreOptionsBottomSheet: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .opacity(isOpenAlbumButtonDisabled() ? 0.5 : 1)
             })
             .padding(.horizontal, 32)
+            .disabled(isOpenAlbumButtonDisabled())
 
         }
         .padding(.horizontal, 0)
         .frame(maxWidth: .infinity, maxHeight: 300)
         .presentationDetents([.height(187)])
         .presentationDragIndicator(.visible)
+    }
+
+    func isOpenAlbumButtonDisabled() -> Bool {
+        let isAlbumIdMissing = song.albumId == nil
+        let isAlbumNameMissing = song.albumName == nil
+        let isAlbumTrackCountMissing = song.albumTrackCount == nil
+        return isAlbumIdMissing || isAlbumNameMissing || isAlbumTrackCountMissing
     }
 }
 
