@@ -20,7 +20,7 @@ import Testing
             let expectedURL = "http://example.com/search?term=Iron%20Maiden&media=music&offset=0&limit=50"
             var response: ITunesSearchResponse?
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenNetworkManagerFetchReturnsCorrectResponse_ThenfetchMusicListShouldReceiveCorrectResponseWithoutErrors() async {
+            @Test mutating func fetch_GivenCorrectUrl_whenNetworkManagerFetchReturnsCorrectResponse_thenfetchMusicListShouldReceiveCorrectResponseWithoutErrors() async {
                 // Given
                 let resultToBeReturned = ITunesSearchResponse.sample()
                 networkManagerSpy.resultToBeReturned = resultToBeReturned
@@ -50,7 +50,7 @@ import Testing
             let baseURL = "http://example.com"
             let expectedURL = "http://example.com/search?term=Iron%20Maiden&media=music&offset=0&limit=50"
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenNetworkManagerFetchReturnsAnError_ThenfetchMusicListShouldReceiveError() async {
+            @Test mutating func fetch_GivenCorrectUrl_whenNetworkManagerFetchReturnsAnError_thenfetchMusicListShouldReceiveError() async {
                 // Given
 
                 errorToThrow = URLError(.badServerResponse)
@@ -83,7 +83,7 @@ import Testing
             let expectedURL = "http://example.com/lookup?id=1147165685&media=music&entity=song"
             var response: ITunesSongsAndDetailsFromAlbumResponse?
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenNetworkManagerFetchReturnsCorrectResponse_ThenfetchSongsAndDetailsFromAlbumShouldReceiveCorrectResponseWithoutErrors() async {
+            @Test mutating func fetch_GivenCorrectUrl_whenNetworkManagerFetchReturnsCorrectResponse_thenfetchSongsAndDetailsFromAlbumShouldReceiveCorrectResponseWithoutErrors() async {
                 // Given
                 let resultToBeReturned = ITunesSongsAndDetailsFromAlbumResponse.sample()
                 networkManagerSpy.resultToBeReturned = resultToBeReturned
@@ -113,7 +113,7 @@ import Testing
             let baseURL = "http://example.com"
             let expectedURL = "http://example.com/lookup?id=1147165685&media=music&entity=song"
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenNetworkManagerFetchReturnsAnError_ThenfetchSongsAndDetailsFromAlbumShouldReceiveError() async {
+            @Test mutating func fetch_GivenCorrectUrl_whenNetworkManagerFetchReturnsAnError_thenfetchSongsAndDetailsFromAlbumShouldReceiveError() async {
                 // Given
 
                 errorToThrow = URLError(.badServerResponse)

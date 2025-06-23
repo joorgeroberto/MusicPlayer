@@ -11,14 +11,14 @@ import Testing
 
 @Suite("ErrorAlertViewModel Tests") struct ErrorAlertViewModelTests {
     @Suite("showErrorAlert() Tests") struct showErrorAlert {
-        @MainActor @Test func GivenSpecificErrorMessage_WhenShowErrorAlertFunctionIsCalled_ThenErrorMessageIsSetAndAlertIsPresented() {
+        @MainActor @Test func givenSpecificErrorMessage_whenShowErrorAlertFunctionIsCalled_thenErrorMessageIsSetAndAlertIsPresented() {
             // Given
             let errorAlertMessage = "Please try again!"
             let sut = ErrorAlertViewModel()
             
             // When
             sut.showErrorAlert(errorAlertMessage: errorAlertMessage)
-            
+
             // Then
             #expect(sut.errorAlertMessage == errorAlertMessage)
             #expect(sut.isErrorAlertPresented)
