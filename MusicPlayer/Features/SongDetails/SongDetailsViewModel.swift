@@ -91,7 +91,9 @@ extension SongDetailsViewModel {
         let isFirstSong = song.trackNumber == 1
         if !isFirstSong {
             resetPlayer()
-            song = albumSongs.first(where: { $0.trackNumber == song.trackNumber - 1 }) ?? song
+            if let previousSong = albumSongs.first(where: { $0.trackNumber == song.trackNumber - 1 }) {
+                self.song = previousSong
+            }
         }
     }
 
@@ -99,7 +101,9 @@ extension SongDetailsViewModel {
         let isLastSong = song.trackNumber == albumDetails?.trackCount
         if !isLastSong {
             resetPlayer()
-            song = albumSongs.first(where: { $0.trackNumber == song.trackNumber + 1 }) ?? song
+            if let nextSong = albumSongs.first(where: { $0.trackNumber == song.trackNumber + 1 }) {
+                self.song = nextSong
+            }
         }
     }
 }
