@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 protocol NetworkManagerProtocol {
     func fetch<T: Decodable>(url: URL) async throws -> T
 }

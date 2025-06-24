@@ -140,7 +140,11 @@ private extension SongDetailsViewModel {
     }
 
     func updateAudioPlayerButtonsAvailability(song: Song) {
-        let isAlbumAvailable = song.albumId != nil && song.albumName != nil
+        let isAlbumIdPopulated = song.albumId != nil
+        let isAlbumNamePopulated = song.albumName != nil
+        let isAlbumTrackCountPopulated = song.albumTrackCount != nil
+
+        let isAlbumAvailable = isAlbumIdPopulated && isAlbumNamePopulated && isAlbumTrackCountPopulated
 
         let isLastSong = song.trackNumber == song.albumTrackCount
         self.isForwardButtonAvailable = !isLastSong && isAlbumAvailable

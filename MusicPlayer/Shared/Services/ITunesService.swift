@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 protocol ITunesServiceProtocol {
     func fetchMusicList(term: String, offset: Int, limit: Int) async throws -> ITunesSearchResponse
     func fetchSongsAndDetailsFromAlbum(withId id: String) async throws -> ITunesSongsAndDetailsFromAlbumResponse

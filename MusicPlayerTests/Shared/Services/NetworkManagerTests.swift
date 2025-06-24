@@ -11,6 +11,7 @@ import Testing
 
 @Suite("Network Manager Tests") struct NetworkManagerTests {
     @Suite("fetch() Tests") struct fetch {
+        @MainActor
         @Suite struct Success {
             let url = URL(string: "http://example.com")!
             let expectedSong = Song.sample()
@@ -22,7 +23,7 @@ import Testing
             }()
             private var urlSessionSpy = URLSessionSpy()
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenNetworkManagerIsCalled_ThenShouldReceiveDataAndResponse() async throws {
+            @Test mutating func fetch_GivenCorrectUrl_whenNetworkManagerIsCalled_thenShouldReceiveDataAndResponse() async throws {
                 // Given
                 urlSessionSpy.dataToBeReturned = dataToBeReturned
                 urlSessionSpy.responseToBeReturned = responseToBeReturned
@@ -37,6 +38,7 @@ import Testing
             }
         }
 
+        @MainActor
         @Suite struct Failure {
             let url = URL(string: "http://example.com")!
             let expectedSong = Song.sample()
@@ -49,7 +51,7 @@ import Testing
             private var errorToBeReturned: Error?
             private var urlSessionSpy = URLSessionSpy()
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenUrlSessionReturnsError_ThenShouldReturnsError() async throws {
+            @Test mutating func fetch_GivenCorrectUrl_whenUrlSessionReturnsError_thenShouldReturnsError() async throws {
                 // Given
                 let errorToBeReturned = URLError(.networkConnectionLost)
                 urlSessionSpy.errorToThrow = errorToBeReturned
@@ -69,7 +71,7 @@ import Testing
                 #expect(expectedError == errorToBeReturned)
             }
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenResponseReturnsError_ThenShouldReturnsBadServerResponseError() async {
+            @Test mutating func fetch_GivenCorrectUrl_whenResponseReturnsError_thenShouldReturnsBadServerResponseError() async {
 
                 // Given
                 responseToBeReturned = HTTPURLResponse(url: url, statusCode: 500, httpVersion: nil, headerFields: nil)!
@@ -91,7 +93,7 @@ import Testing
                 #expect(expectedError == URLError(.badServerResponse))
             }
 
-            @Test mutating func fetch_GivenCorrectUrl_WhenDataReturnsError_ThenShouldReturnsCannotDecodeContentDataError() async {
+            @Test mutating func fetch_GivenCorrectUrl_whenDataReturnsError_thenShouldReturnsCannotDecodeContentDataError() async {
                 // Given
                 urlSessionSpy.dataToBeReturned = "".data(using: .utf8)!
                 urlSessionSpy.responseToBeReturned = responseToBeReturned

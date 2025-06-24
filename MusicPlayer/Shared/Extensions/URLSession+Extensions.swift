@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+@MainActor
 protocol URLSessionProtocol {
     func data(from url: URL) async throws -> (Data, URLResponse)
 }
