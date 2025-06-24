@@ -192,7 +192,7 @@ import Testing
             }()
 
             @Test("Given populated search term and not fetching music list, when fetchMusicList is called and service returns failure, then songs should remain empty, offset should stay at 0, searchTerm should be cleared, and error alert should be shown.")
-            mutating func givenPopulatedSearchTermAndNotFetchingMusicList_whenFetchMusicListFails_thenSongsOffsetAndSearchTermAreResetAndErrorAlertIsShown() async {
+            mutating func givenPopulatedSearchTermAndNotFetchingMusicList_whenFetchMusicListFails_thenSearchTermAreResetAndErrorAlertIsShown() async {
                 // Given
                 let expectedOffset = 0
                 iTunesServiceSpy.fetchMusicListResult = .failure(URLError(.badServerResponse))
@@ -312,10 +312,10 @@ import Testing
             mutating func givenEmptySearchTermAndIsNotLoadingMore_whenLoadMoreIsCalled_thenNoRequestShouldBeMade() async {
                 // Given
                 sut.searchTerm = ""
-                sut.isFetchingMusicList = false
+                sut.isLoadingMore = false
 
                 // When
-                _ = await sut.fetchMusicList()
+                _ = await sut.loadMore()
 
                 // Then
                 #expect(sut.songs.isEmpty)
@@ -327,10 +327,10 @@ import Testing
             mutating func givenEmptySearchTermAndIsLoadingMore_whenLoadMoreIsCalled_thenNoRequestShouldBeMade() async {
                 // Given
                 sut.searchTerm = ""
-                sut.isFetchingMusicList = true
+                sut.isLoadingMore = true
 
                 // When
-                _ = await sut.fetchMusicList()
+                _ = await sut.loadMore()
 
                 // Then
                 #expect(sut.songs.isEmpty)
@@ -342,10 +342,10 @@ import Testing
             mutating func givenPopulatedSearchTermAndIsLoadingMore_whenLoadMoreIsCalled_thenNoRequestShouldBeMade() async {
                 // Given
                 sut.searchTerm = "Search Term"
-                sut.isFetchingMusicList = true
+                sut.isLoadingMore = true
 
                 // When
-                _ = await sut.fetchMusicList()
+                _ = await sut.loadMore()
 
                 // Then
                 #expect(sut.songs.isEmpty)
@@ -369,13 +369,48 @@ import Testing
                 iTunesServiceSpy.fetchMusicListResult = .success(expectedResponse)
                 sut = HomeViewModel(iTunesService: iTunesServiceSpy)
                 sut.searchTerm = expectedSearchTerm
-                sut.isFetchingMusicList = false
+                sut.isLoadingMore = false
                 sut.songs = []
 
                 // When
-                await sut.fetchMusicList()
+                await sut.loadMore()
 
                 // Then
+                #expect(sut.songs.count == 2)
+                #expect(sut.offset == expectedOffset)
+                #expect(sut.isLoadingMore == false)
+                #expect(iTunesServiceSpy.capturedTerm == expectedSearchTerm)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
+            }
+
+            @Test("Should not append songs with duplicate trackId when loading more results")
+            mutating func givenPopulatedSearchTermAndNotLoadingMore_whenFetchMusicListReturnsSuccessWithDuplicateTrackIdsInResponse_thenOnlyUniqueSongsAreAppended() async {
+                // Given
+                let existingSong = Song.sample(trackId: 1)
+                let expectedOffset = 50
+                let expectedSearchTerm = "Search Term"
+                sut.songs = [existingSong]
+                sut.searchTerm = expectedSearchTerm
+
+                let duplicateSong = Song.sample(trackId: 1)
+                let newSong = Song.sample(trackId: 2)
+                let expectedResultTrackIds = [1, 2]
+
+                let expectedResponse = ITunesSearchResponse(
+                    resultCount: 2,
+                    results: [
+                        duplicateSong,
+                        newSong
+                    ]
+                )
+                iTunesServiceSpy.fetchMusicListResult = .success(expectedResponse)
+
+                // When
+                await sut.loadMore()
+
+                // Then
+
+                #expect(expectedResultTrackIds == [1, 2])
                 #expect(sut.songs.count == 2)
                 #expect(sut.offset == expectedOffset)
                 #expect(sut.isLoadingMore == false)
@@ -385,7 +420,36 @@ import Testing
         }
 
         @MainActor
-        @Suite struct Failure {}
+        @Suite struct Failure {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            lazy var sut: HomeViewModel = {
+                return HomeViewModel(iTunesService: iTunesServiceSpy)
+            }()
+
+            @Test("Should clear search term and show error alert when loadMore fails with populated search term and not already loading more.")
+            mutating func givenPopulatedSearchTermAndNotIsLoadingMore_whenFetchMusicListFails_thenSearchTermAreResetAndErrorAlertIsShown() async {
+                // Given
+                let expectedOffset = 0
+                iTunesServiceSpy.fetchMusicListResult = .failure(URLError(.badServerResponse))
+                sut = HomeViewModel(iTunesService: iTunesServiceSpy)
+                sut.searchTerm = "Search Term"
+                sut.isFetchingMusicList = false
+                sut.songs = []
+
+                // When
+                await sut.loadMore()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(sut.offset == expectedOffset)
+                #expect(sut.searchTerm.isEmpty)
+                #expect(sut.isErrorAlertPresented)
+
+                #expect(iTunesServiceSpy.capturedOffset == expectedOffset)
+                #expect(iTunesServiceSpy.capturedOffset == 0)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
+            }
+        }
     }
 
 //    @Suite("showErrorAlert() Tests") struct fetchMusicList {
