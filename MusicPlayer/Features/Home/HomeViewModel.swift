@@ -43,7 +43,7 @@ extension HomeViewModel {
 
         isLoadingMore = true
         defer { isLoadingMore = false }
-        
+
         do {
             let response: ITunesSearchResponse = try await iTunesService.fetchMusicList(
                 term: searchTerm,
@@ -51,7 +51,7 @@ extension HomeViewModel {
                 limit: limit
             )
             let existingIds = Set(songs.map { $0.trackId })
-            
+
             let filteredSongs = response.results.filter { !existingIds.contains($0.trackId) }
             songs.append(contentsOf: filteredSongs)
             offset += limit

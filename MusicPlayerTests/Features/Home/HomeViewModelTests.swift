@@ -5,6 +5,7 @@
 //  Created by Jorge de Carvalho on 23/06/25.
 //
 
+import Combine
 import SwiftUI
 import Testing
 @testable import MusicPlayer
@@ -140,7 +141,7 @@ import Testing
                 #expect(iTunesServiceSpy.fetchMusicListCallCount == 0)
             }
 
-            @Test("Should clear songs and skip network request when search term is valid and is already fetching.")
+            @Test("Should clear songs and skip network request when search term is populated and is already fetching.")
             mutating func givenPopulatedSearchTermAndIsFetchingMusicList_whenFetchMusicListIsCalled_thenSongsArrayShouldBeClearedAndNoRequestMade() async {
                 // Given
                 sut.searchTerm = "Search Term"
@@ -177,6 +178,7 @@ import Testing
                 // Then
                 #expect(sut.songs.count == 1)
                 #expect(sut.offset == expectedOffset)
+                #expect(sut.isLoadingMore == false)
                 #expect(iTunesServiceSpy.capturedTerm == expectedSearchTerm)
                 #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
             }
@@ -213,6 +215,177 @@ import Testing
                 #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
             }
         }
+    }
+
+    @Suite("setupSearchDebounce() Tests") struct setupSearchDebounce {
+
+        @MainActor
+        @Suite struct Success {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            lazy var sut: HomeViewModel = {
+                return HomeViewModel(iTunesService: iTunesServiceSpy)
+            }()
+
+            @Test("Given search term, when debounce completes, then fetchMusicList should be called once, returns success and songs updated.")
+            mutating func givenSearchTerm_whenDebounceCompletes_thenFetchMusicListIsCalledOnceAndSongsAreUpdated() async {
+                // Given
+                let expectedResponse = ITunesSearchResponse(
+                    resultCount: 1,
+                    results: [Song.sample()]
+                )
+                let expectedSearchTerm = "Search Term"
+                let expectedOffset = 50
+
+                iTunesServiceSpy.fetchMusicListResult = .success(expectedResponse)
+                sut = HomeViewModel(iTunesService: iTunesServiceSpy)
+                sut.searchTerm = expectedSearchTerm
+                sut.isFetchingMusicList = false
+                sut.songs = []
+
+                // When
+                await confirmation(expectedCount: 1) { confirm in
+                    iTunesServiceSpy.onFetchMusicListCalled = {
+                        confirm()
+                    }
+                    sut.searchTerm = expectedSearchTerm
+                    try? await Task.sleep(for: .milliseconds(2_000))  // 2 seconds
+                }
+
+                // Then
+                #expect(sut.songs.count == 1)
+                #expect(sut.offset == expectedOffset)
+                #expect(iTunesServiceSpy.capturedTerm == expectedSearchTerm)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
+            }
+        }
+
+        @MainActor
+        @Suite struct Failure {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            lazy var sut: HomeViewModel = {
+                return HomeViewModel(iTunesService: iTunesServiceSpy)
+            }()
+
+            @Test("Given search term, when debounce completes, then fetchMusicList should be called once, returns failure and songs not are updated.")
+            mutating func givenSearchTerm_whenDebounceCompletes_thenFetchMusicListIsCalledOnceAndSongsNotAreUpdated() async {
+                // Given
+                let expectedSearchTerm = "Search Term"
+                let expectedOffset = 0
+
+                iTunesServiceSpy.fetchMusicListResult = .failure(URLError(.badServerResponse))
+                sut = HomeViewModel(iTunesService: iTunesServiceSpy)
+                sut.searchTerm = expectedSearchTerm
+                sut.isFetchingMusicList = false
+                sut.songs = []
+
+                // When
+                await confirmation(expectedCount: 1) { confirm in
+                    iTunesServiceSpy.onFetchMusicListCalled = {
+                        confirm()
+                    }
+                    sut.searchTerm = expectedSearchTerm
+                    try? await Task.sleep(for: .milliseconds(2_000))  // 2 seconds
+                }
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(sut.offset == expectedOffset)
+                #expect(sut.searchTerm.isEmpty)
+                #expect(sut.isErrorAlertPresented)
+
+                #expect(iTunesServiceSpy.capturedOffset == expectedOffset)
+                #expect(iTunesServiceSpy.capturedOffset == 0)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
+            }
+        }
+    }
+
+    @Suite("loadMore() Tests") struct loadMore {
+        @MainActor
+        @Suite struct Success {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            lazy var sut: HomeViewModel = {
+                return HomeViewModel(iTunesService: iTunesServiceSpy)
+            }()
+
+            @Test("Should skips network request when search term is empty and not currently fetching.")
+            mutating func givenEmptySearchTermAndIsNotLoadingMore_whenLoadMoreIsCalled_thenNoRequestShouldBeMade() async {
+                // Given
+                sut.searchTerm = ""
+                sut.isFetchingMusicList = false
+
+                // When
+                _ = await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(sut.offset == 0)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 0)
+            }
+
+            @Test("Should skips network request when search term is populated and not currently fetching.")
+            mutating func givenEmptySearchTermAndIsLoadingMore_whenLoadMoreIsCalled_thenNoRequestShouldBeMade() async {
+                // Given
+                sut.searchTerm = ""
+                sut.isFetchingMusicList = true
+
+                // When
+                _ = await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(sut.offset == 0)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 0)
+            }
+
+            @Test("Should skip network request when search term is populated and is already fetching.")
+            mutating func givenPopulatedSearchTermAndIsLoadingMore_whenLoadMoreIsCalled_thenNoRequestShouldBeMade() async {
+                // Given
+                sut.searchTerm = "Search Term"
+                sut.isFetchingMusicList = true
+
+                // When
+                _ = await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.isEmpty)
+                #expect(sut.offset == 0)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 0)
+            }
+
+            @Test("Should update songs and offset when search term is populated and service returns success.")
+            mutating func givenPopulatedSearchTermAndNotLoadingMore_whenFetchMusicListReturnsSuccess_thenSongsAndOffsetAreUpdated() async {
+                // Given
+                let expectedResponse = ITunesSearchResponse(
+                    resultCount: 2,
+                    results: [
+                        Song.sample(),
+                        Song.sample()
+                    ]
+                )
+                let expectedSearchTerm = "Search Term"
+                let expectedOffset = 50
+
+                iTunesServiceSpy.fetchMusicListResult = .success(expectedResponse)
+                sut = HomeViewModel(iTunesService: iTunesServiceSpy)
+                sut.searchTerm = expectedSearchTerm
+                sut.isFetchingMusicList = false
+                sut.songs = []
+
+                // When
+                await sut.fetchMusicList()
+
+                // Then
+                #expect(sut.songs.count == 2)
+                #expect(sut.offset == expectedOffset)
+                #expect(sut.isLoadingMore == false)
+                #expect(iTunesServiceSpy.capturedTerm == expectedSearchTerm)
+                #expect(iTunesServiceSpy.fetchMusicListCallCount == 1)
+            }
+        }
+
+        @MainActor
+        @Suite struct Failure {}
     }
 
 //    @Suite("showErrorAlert() Tests") struct fetchMusicList {
