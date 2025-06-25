@@ -5,12 +5,11 @@
 //  Created by Jorge de Carvalho on 23/06/25.
 //
 
-import Combine
 import SwiftUI
 import Testing
 @testable import MusicPlayer
 
-@Suite("HomeViewModelTests Tests") struct HomeViewModelTests {
+@Suite("HomeViewModel Tests") struct HomeViewModelTests {
     @MainActor
     @Suite("showEmptyState() Tests") struct showEmptyState {
         let iTunesServiceSpy = ITunesServiceSpy()
@@ -451,17 +450,4 @@ import Testing
             }
         }
     }
-
-//    @Suite("showErrorAlert() Tests") struct fetchMusicList {
-//
-//        @Suite struct Success {
-//            @Test func given_when_then() {
-//                // Given
-//                // When
-//                // Then
-//            }
-//        }
-//
-//        @Suite struct Failure {}
-//    }
 }

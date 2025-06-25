@@ -14,7 +14,7 @@ class SongDetailsViewModel: ErrorAlertViewModel {
     @Published var song: Song
     @Published var albumSongs: [Song] = []
     @Published var albumDetails: Album?
-    @Published var player: AVPlayer?
+    @Published var player: AVPlayerProtocol?
     @Published var isPlaying = false
 
     @Published var isForwardButtonAvailable = false
@@ -25,14 +25,24 @@ class SongDetailsViewModel: ErrorAlertViewModel {
 
     @Published var currentTime: Double = 0
     @Published var duration: Double = 29
+
     private var timeObserver: Any?
+    private let avPlayerFactory: AVPlayerFactoryProtocol
+    private let avAudioSession: AVAudioSessionProtocol
 
     private let iTunesService: ITunesServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
+    private(set) var cancellables = Set<AnyCancellable>()
 
-    init(song: Song, iTunesService: ITunesServiceProtocol = ITunesService()) {
+    init(
+        song: Song,
+        iTunesService: ITunesServiceProtocol = ITunesService(),
+        avPlayerFactory: AVPlayerFactoryProtocol = AVPlayerFactory(),
+        avAudioSession: AVAudioSessionProtocol = AVAudioSession.sharedInstance()
+    ) {
         self.song = song
         self.iTunesService = iTunesService
+        self.avPlayerFactory = avPlayerFactory
+        self.avAudioSession = avAudioSession
 
         super.init()
 
@@ -64,26 +74,25 @@ class SongDetailsViewModel: ErrorAlertViewModel {
         guard let albumId = song.albumId else {
             return
         }
-        Task { @MainActor [iTunesService] in
-            do {
-                let response: ITunesSongsAndDetailsFromAlbumResponse = try await iTunesService.fetchSongsAndDetailsFromAlbum(withId: String(albumId))
 
-                var fetchedSongs: [Song] = []
+        do {
+            let response: ITunesSongsAndDetailsFromAlbumResponse = try await iTunesService.fetchSongsAndDetailsFromAlbum(withId: String(albumId))
 
-                for result in response.results {
-                    switch result {
-                    case .song(let song):
-                        fetchedSongs.append(song)
-                    case .album(let album):
-                        self.albumDetails = album
-                    }
+            var fetchedSongs: [Song] = []
+
+            for result in response.results {
+                switch result {
+                case .song(let song):
+                    fetchedSongs.append(song)
+                case .album(let album):
+                    self.albumDetails = album
                 }
-
-                fetchedSongs.sort { ($0.trackNumber) < ($1.trackNumber) }
-                self.albumSongs = fetchedSongs
-            } catch {
-                showErrorAlert()
             }
+
+            fetchedSongs.sort { ($0.trackNumber) < ($1.trackNumber) }
+            self.albumSongs = fetchedSongs
+        } catch {
+            showErrorAlert()
         }
     }
 }
@@ -154,17 +163,24 @@ private extension SongDetailsViewModel {
     }
 
     func setupAVPlayer(url: String) {
-        guard let url = URL(string: url) else { return }
-        player = AVPlayer(url: url)
-        player?.automaticallyWaitsToMinimizeStalling = false
+        do {
+            player = try avPlayerFactory.makePlayer(with: url)
+            player?.automaticallyWaitsToMinimizeStalling = false
+        } catch {
+            showErrorAlert(
+                errorAlertMessage: "Unable to reproduce. Please try again!"
+            )
+        }
     }
 
     func setupAVAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-            try AVAudioSession.sharedInstance().setActive(true)
+            try avAudioSession.setCategory(.playback, mode: .default, options: [])
+            try avAudioSession.setActive(true, options: [])
         } catch {
-            showErrorAlert()
+            showErrorAlert(
+                errorAlertMessage: "Unable to reproduce. Please try again!"
+            )
             print("Failure to configure AVAudioSession: \(error)")
         }
     }
@@ -172,12 +188,13 @@ private extension SongDetailsViewModel {
     func setupPeriodicTimeObserver() {
         guard let player = player else { return }
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        let currentItem = player.currentItem
 
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             Task { @MainActor in
                 guard let self = self else { return }
                 self.currentTime = time.seconds
-                if let durationSeconds = player.currentItem?.duration.seconds, durationSeconds.isFinite {
+                if let durationSeconds = currentItem?.duration.seconds, durationSeconds.isFinite {
                     self.duration = durationSeconds - time.seconds
                 }
             }
@@ -208,7 +225,7 @@ private extension SongDetailsViewModel {
         self.onSeek(to: 0)
         self.isPlaying = false
         self.player?.pause()
-        self.player = nil
         self.removePeriodicTimeObserver()
+        self.player = nil
     }
 }
