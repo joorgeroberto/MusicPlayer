@@ -411,9 +411,6 @@ import AVFoundation
         }
     }
 
-
-
-
     @Suite("setupAVAudioSession() Tests") struct setupAVAudioSession {
 
         @MainActor
@@ -532,4 +529,230 @@ import AVFoundation
             }
         }
     }
+
+    @Suite("bindSongChangesToPlayer() Tests") struct bindSongChangesToPlayer {
+
+        @MainActor
+        @Suite struct Success {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            var song = Song.sample()
+
+            lazy var avPlayerSpy: AVPlayerSpy = {
+                AVPlayerSpy()
+            }()
+            lazy var avAudioSessionSpy: AVAudioSessionSpy = {
+                AVAudioSessionSpy()
+            }()
+            lazy var avPlayerFactorySpy: AVPlayerFactorySpy = {
+                var avPlayerFactorySpy = AVPlayerFactorySpy()
+                avPlayerFactorySpy.playerToReturn = avPlayerSpy
+                return avPlayerFactorySpy
+            }()
+
+            @Test("Should call AVPlayerFactory and not show error when setupAVPlayer is called by bindSongChangesToPlayer during ViewModel init.")
+            mutating func givenAVPlayerFactorySucceeds_whenSetupAVPlayerIsCalledByBindSongChangesToPlayerInInit_thenShouldCreatePlayerWithoutError() {
+                // Given
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+
+                // Then
+                #expect(avPlayerFactorySpy.errorToThrow == nil)
+                #expect(avPlayerFactorySpy.receivedURLs[0] == song.previewUrl)
+                #expect(avPlayerFactorySpy.callCount == 1)
+                #expect(avPlayerSpy.automaticallyWaitsToMinimizeStalling == false)
+                #expect(sut.isErrorAlertPresented == false)
+            }
+
+
+            @Test("Should disable forward and backward buttons when song has no album information when updateAudioPlayerButtonsAvailability is called by bindSongChangesToPlayer during ViewModel init.")
+            mutating func givenSongWithoutAlbumInfo_whenViewModelInit_thenForwardAndBackwardButtonsAreDisabled() {
+                // Given
+                song = Song.sample(
+                    albumId: nil,
+                    albumName: nil,
+                    albumTrackCount: nil
+                )
+
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+
+                // Then
+                #expect(sut.isForwardButtonAvailable == false)
+                #expect(sut.isBackwardButtonAvailable == false)
+            }
+
+            @Test("Should disable forward and backward buttons when song has albumId but missing albumName and albumTrackCount, when updateAudioPlayerButtonsAvailability is called by bindSongChangesToPlayer during ViewModel init.")
+            mutating func givenSongWithAlbumIdButMissingAlbumNameAndTrackCount_whenViewModelInitTriggersBindSongChangesToPlayer_thenForwardAndBackwardButtonsAreDisabled() {
+                // Given
+                song = Song.sample(
+                    albumId: 1,
+                    albumName: nil,
+                    albumTrackCount: nil
+                )
+
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+
+                // Then
+                #expect(sut.isForwardButtonAvailable == false)
+                #expect(sut.isBackwardButtonAvailable == false)
+            }
+
+            @Test("Should disable forward and backward buttons when song has albumId and albumName but missing albumTrackCount, when updateAudioPlayerButtonsAvailability is called by bindSongChangesToPlayer during ViewModel init.")
+            mutating func givenSongWithAlbumIdAndAlbumNameButMissingAlbumTrackCount_whenViewModelInitTriggersBindSongChangesToPlayer_thenForwardAndBackwardButtonsAreDisabled() {
+                // Given
+                song = Song.sample(
+                    albumId: 1,
+                    albumName: "Name",
+                    albumTrackCount: nil
+                )
+
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+
+                // Then
+                #expect(sut.isForwardButtonAvailable == false)
+                #expect(sut.isBackwardButtonAvailable == false)
+            }
+
+            @Test("Should enable forward and disable backward button when song is first track in album and updateAudioPlayerButtonsAvailability is called by bindSongChangesToPlayer during ViewModel init.")
+            mutating func givenFirstSongInAlbum_whenViewModelInitTriggersBindSongChangesToPlayer_thenForwardButtonIsEnabledAndBackwardButtonIsDisabled() {
+                // Given
+                song = Song.sample(
+                    albumId: 1,
+                    albumName: "Name",
+                    trackNumber: 1,
+                    albumTrackCount: 2
+                )
+
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+
+                // Then
+                #expect(sut.isForwardButtonAvailable == true)
+                #expect(sut.isBackwardButtonAvailable == false)
+            }
+
+            @Test("Should disable forward and enable backward button when song is last track in album and updateAudioPlayerButtonsAvailability is called by bindSongChangesToPlayer during ViewModel init.")
+            mutating func givenLastSongInAlbum_whenViewModelInitTriggersBindSongChangesToPlayer_thenForwardButtonIsDisabledAndBackwardButtonIsEnabled() {
+                // Given
+                song = Song.sample(
+                    albumId: 1,
+                    albumName: "Name",
+                    trackNumber: 2,
+                    albumTrackCount: 2
+                )
+
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+
+                // Then
+                #expect(sut.isForwardButtonAvailable == false)
+                #expect(sut.isBackwardButtonAvailable == true)
+            }
+
+            @Test("Should disable both forward and backward buttons when song is the only track in album and updateAudioPlayerButtonsAvailability is called by bindSongChangesToPlayer during ViewModel init.")
+            mutating func givenSingleTrackAlbum_whenViewModelInitTriggersBindSongChangesToPlayer_thenForwardAndBackwardButtonsAreDisabled() {
+                // Given
+                song = Song.sample(
+                    albumId: 1,
+                    albumName: "Name",
+                    trackNumber: 1,
+                    albumTrackCount: 1
+                )
+
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+
+                // Then
+                #expect(sut.isForwardButtonAvailable == false)
+                #expect(sut.isBackwardButtonAvailable == false)
+            }
+        }
+
+        @MainActor
+        @Suite struct Failure {
+            let iTunesServiceSpy = ITunesServiceSpy()
+            var song = Song.sample()
+
+            lazy var avPlayerSpy: AVPlayerSpy = {
+                AVPlayerSpy()
+            }()
+            lazy var avAudioSessionSpy: AVAudioSessionSpy = {
+                AVAudioSessionSpy()
+            }()
+            lazy var avPlayerFactorySpy: AVPlayerFactorySpy = {
+                var avPlayerFactorySpy = AVPlayerFactorySpy()
+                avPlayerFactorySpy.playerToReturn = avPlayerSpy
+                return avPlayerFactorySpy
+            }()
+
+            @Test("Should show error alert when when setupAVPlayer is called by bindSongChangesToPlayer and AVPlayerFactory throws error during ViewModel init.")
+            mutating func givenAVPlayerFactoryThrowsError_whenSetupAVPlayerIsCalledInViewModelInit_thenShouldShowErrorAlert() {
+                // Given
+                let errorToThrow = CommonsErrors.invalidURL
+                avPlayerFactorySpy.errorToThrow = errorToThrow
+
+                // When
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+                // Then
+                #expect(sut.isErrorAlertPresented)
+                #expect(avPlayerFactorySpy.errorToThrow as! CommonsErrors == errorToThrow)
+                #expect(avPlayerFactorySpy.receivedURLs[0] == song.previewUrl)
+                #expect(avPlayerFactorySpy.callCount == 1)
+            }
+        }
+    }
+    //    @Suite("showErrorAlert() Tests") struct fetchMusicList {
+    //
+    //        @Suite struct Success {
+    //            @Test func given_when_then() {
+    //                // Given
+    //                // When
+    //                // Then
+    //            }
+    //        }
+    //
+    //        @Suite struct Failure {}
+    //    }
 }
