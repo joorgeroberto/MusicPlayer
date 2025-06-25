@@ -52,4 +52,14 @@ extension Album {
             artworkLowQuality: artworkLowQuality
         )
     }
+
+    static func sampleAlbumSongs(albumTrackCount: Int = 2) -> [Song] {
+            (1...albumTrackCount).map { trackNumber in
+                Song.sample(
+                    trackId: trackNumber,
+                    trackNumber: trackNumber,
+                    albumTrackCount: albumTrackCount
+                )
+            }
+        }
 }
