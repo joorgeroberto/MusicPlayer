@@ -23,7 +23,7 @@ import Testing
             }()
             private var urlSessionSpy = URLSessionSpy()
 
-            @Test mutating func fetch_GivenCorrectUrl_whenNetworkManagerIsCalled_thenShouldReceiveDataAndResponse() async throws {
+            @Test mutating func fetch_givenCorrectUrl_whenNetworkManagerIsCalled_thenShouldReceiveDataAndResponse() async throws {
                 // Given
                 urlSessionSpy.dataToBeReturned = dataToBeReturned
                 urlSessionSpy.responseToBeReturned = responseToBeReturned
@@ -51,7 +51,7 @@ import Testing
             private var errorToBeReturned: Error?
             private var urlSessionSpy = URLSessionSpy()
 
-            @Test mutating func fetch_GivenCorrectUrl_whenUrlSessionReturnsError_thenShouldReturnsError() async throws {
+            @Test mutating func fetch_givenCorrectUrl_whenUrlSessionReturnsError_thenShouldReturnsError() async throws {
                 // Given
                 let errorToBeReturned = URLError(.networkConnectionLost)
                 urlSessionSpy.errorToThrow = errorToBeReturned
@@ -71,7 +71,7 @@ import Testing
                 #expect(expectedError == errorToBeReturned)
             }
 
-            @Test mutating func fetch_GivenCorrectUrl_whenResponseReturnsError_thenShouldReturnsBadServerResponseError() async {
+            @Test mutating func fetch_givenCorrectUrl_whenResponseReturnsError_thenShouldReturnsBadServerResponseError() async {
 
                 // Given
                 responseToBeReturned = HTTPURLResponse(url: url, statusCode: 500, httpVersion: nil, headerFields: nil)!
@@ -93,7 +93,7 @@ import Testing
                 #expect(expectedError == URLError(.badServerResponse))
             }
 
-            @Test mutating func fetch_GivenCorrectUrl_whenDataReturnsError_thenShouldReturnsCannotDecodeContentDataError() async {
+            @Test mutating func fetch_givenCorrectUrl_whenDataReturnsError_thenShouldReturnsCannotDecodeContentDataError() async {
                 // Given
                 urlSessionSpy.dataToBeReturned = "".data(using: .utf8)!
                 urlSessionSpy.responseToBeReturned = responseToBeReturned

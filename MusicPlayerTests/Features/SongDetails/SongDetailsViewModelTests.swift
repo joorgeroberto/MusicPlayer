@@ -743,16 +743,4 @@ import AVFoundation
             }
         }
     }
-    //    @Suite("showErrorAlert() Tests") struct fetchMusicList {
-    //
-    //        @Suite struct Success {
-    //            @Test func given_when_then() {
-    //                // Given
-    //                // When
-    //                // Then
-    //            }
-    //        }
-    //
-    //        @Suite struct Failure {}
-    //    }
 }
