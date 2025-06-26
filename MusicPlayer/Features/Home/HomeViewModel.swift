@@ -8,39 +8,42 @@
 import Combine
 import SwiftUI
 
-class HomeViewModel: ObservableObject {
+@MainActor
+class HomeViewModel: ErrorAlertViewModel {
     @Published var searchTerm = ""
     @Published var songs: [Song] = []
-    @Published private(set) var isLoadingMore = false
+    @Published var selectedSong: Song?
+    @Published var isLoadingMore = false
+    @Published var isFetchingMusicList = false
 
     private let iTunesService: ITunesServiceProtocol
     private var cancellables = Set<AnyCancellable>()
-    private var offset = 0
-    private var limit = 50
+    private(set) var offset = 0
+    private(set) var limit = 50
 
     init(iTunesService: ITunesServiceProtocol = ITunesService()) {
         self.iTunesService = iTunesService
+        super.init()
         self.setupSearchDebounce()
     }
 
-    private func setupSearchDebounce() {
-        $searchTerm
-            .debounce(for: .seconds(1), scheduler: RunLoop.main)
-            .removeDuplicates()
-            .sink { [weak self] text in
-                Task {
-                    await self?.fetchMusicList()
-                }
-            }
-            .store(in: &cancellables)
+    func showEmptyState() -> Bool {
+        return searchTerm.isEmpty
     }
 
-    @MainActor
+    func showProgressView() -> Bool {
+        return songs.isEmpty && isFetchingMusicList
+    }
+}
+
+// MARK: API Calls
+extension HomeViewModel {
     func loadMore() async {
         guard !isLoadingMore, !searchTerm.isEmpty else { return }
 
         isLoadingMore = true
         defer { isLoadingMore = false }
+
         do {
             let response: ITunesSearchResponse = try await iTunesService.fetchMusicList(
                 term: searchTerm,
@@ -53,20 +56,22 @@ class HomeViewModel: ObservableObject {
             songs.append(contentsOf: filteredSongs)
             offset += limit
         } catch {
-            // TODO: Add Error Alert
+            searchTerm = ""
+            showErrorAlert()
         }
     }
 
-    @MainActor
     func fetchMusicList() async {
-        guard !searchTerm.isEmpty else {
+        guard !isFetchingMusicList, !searchTerm.isEmpty else {
             songs = []
             return
         }
 
+        isFetchingMusicList = true
+        defer { isFetchingMusicList = false }
         offset = 0
         do {
-            let response: ITunesSearchResponse = try await self.iTunesService.fetchMusicList(
+            let response: ITunesSearchResponse = try await iTunesService.fetchMusicList(
                 term: searchTerm,
                 offset: offset,
                 limit: limit
@@ -74,7 +79,23 @@ class HomeViewModel: ObservableObject {
             songs = response.results
             offset += limit
         } catch {
-            // TODO: Add Error Alert
+            searchTerm = ""
+            showErrorAlert()
         }
+    }
+}
+
+// MARK: Private functions
+private extension HomeViewModel {
+    func setupSearchDebounce() {
+        $searchTerm
+            .debounce(for: .seconds(1), scheduler: RunLoop.main)
+            .removeDuplicates()
+            .sink { [weak self] _ in
+                Task {
+                    await self?.fetchMusicList()
+                }
+            }
+            .store(in: &cancellables)
     }
 }

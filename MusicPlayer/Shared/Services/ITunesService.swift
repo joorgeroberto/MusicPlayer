@@ -7,16 +7,22 @@
 
 import SwiftUI
 
+@MainActor
 protocol ITunesServiceProtocol {
     func fetchMusicList(term: String, offset: Int, limit: Int) async throws -> ITunesSearchResponse
+    func fetchSongsAndDetailsFromAlbum(withId id: String) async throws -> ITunesSongsAndDetailsFromAlbumResponse
 }
 
-class ITunesService: ITunesServiceProtocol {
+final class ITunesService: ITunesServiceProtocol {
     private let networkManager: NetworkManagerProtocol
-    private let baseURL = "https://itunes.apple.com"
+    private let baseURL: String
 
-    init(networkManager: NetworkManagerProtocol = NetworkManager()) {
+    init(
+        networkManager: NetworkManagerProtocol = NetworkManager(),
+        baseURL: String = "https://itunes.apple.com"
+    ) {
         self.networkManager = networkManager
+        self.baseURL = baseURL
     }
 
     func fetchMusicList(term: String, offset: Int = 0, limit: Int = 50) async throws -> ITunesSearchResponse {
@@ -28,6 +34,23 @@ class ITunesService: ITunesServiceProtocol {
         ]
 
         var urlComponents = URLComponents(string: baseURL + "/search")!
+        urlComponents.queryItems = queryItems
+
+        guard let url = urlComponents.url else {
+            throw URLError(.badURL)
+        }
+
+        return try await networkManager.fetch(url: url)
+    }
+
+    func fetchSongsAndDetailsFromAlbum(withId id: String) async throws -> ITunesSongsAndDetailsFromAlbumResponse {
+        let queryItems = [
+            URLQueryItem(name: "id", value: id),
+            URLQueryItem(name: "media", value: "music"),
+            URLQueryItem(name: "entity", value: "song")
+        ]
+
+        var urlComponents = URLComponents(string: baseURL + "/lookup")!
         urlComponents.queryItems = queryItems
 
         guard let url = urlComponents.url else {

@@ -15,46 +15,93 @@ struct HomeView: View {
     }
 
     var body: some View {
-            NavigationView {
-                VStack(alignment: .leading) {
-                    List(viewModel.songs, id: \.trackId) { song in
-                        VStack(alignment: .leading) {
-                            ListItem(song: song)
-                        }
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(
-                            .init(
-                                top: 8,
-                                leading: 16,
-                                bottom: 8,
-                                trailing: 16
-                            )
-                        )
-                        .onAppear {
-                            if song == viewModel.songs.last {
-                                Task {
-                                    await viewModel.loadMore()
-                                }
-                            }
-                        }
+        NavigationStack {
+            VStack(alignment: .leading) {
+                Group {
+                    if viewModel.showEmptyState() {
+                        EmptyState
+                    } else if viewModel.showProgressView() {
+                        ProgressView
+                    } else {
+                        SongList
                     }
-                    .searchable(text: $viewModel.searchTerm, prompt: "Search")
-                    .navigationTitle("Songs")
-                    .listStyle(.plain)
+                }
+                .alert("Something went wrong...", isPresented: $viewModel.isErrorAlertPresented) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text(viewModel.errorAlertMessage)
+                }
 
-                    if viewModel.isLoadingMore {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                                .padding()
-                            Spacer()
-                        }
+                if viewModel.isLoadingMore {
+                    HStack {
+                        Spacer()
+                        SwiftUI.ProgressView()
+                            .padding()
+                        Spacer()
                     }
                 }
             }
+            .searchable(text: $viewModel.searchTerm, prompt: "Search")
+            .navigationTitle("Songs")
         }
+    }
+
+    private var EmptyState: some View {
+        Group {
+            Spacer()
+            Text("Start typing to search for songs.")
+                .foregroundColor(.gray)
+                .font(.custom(.xLarge, .regular))
+                .multilineTextAlignment(.center)
+                .padding()
+            Spacer()
+        }
+    }
+
+    private var ProgressView: some View {
+        Group {
+            Spacer()
+            SwiftUI.ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                .scaleEffect(1.5)
+            Spacer()
+        }
+    }
+
+    private var SongList: some View {
+        List(viewModel.songs, id: \.trackId) { song in
+            VStack(alignment: .leading) {
+                SongListRow(song: song)
+            }
+            .listRowSeparator(.hidden)
+            .onAppear {
+                if song == viewModel.songs.last {
+                    Task { [viewModel] in
+                        await viewModel.loadMore()
+                    }
+                }
+            }
+            .onTapGesture {
+                viewModel.selectedSong = song
+            }
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+        }
+        .listStyle(.plain)
+        .navigationDestination(item: $viewModel.selectedSong) { song in
+            SongDetailsView(viewModel: SongDetailsViewModel(song: song))
+        }
+    }
 }
 
-#Preview {
+#Preview("Empty State") {
     HomeView()
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Populated") {
+    let viewModel = HomeViewModel()
+    viewModel.searchTerm = Song.sample().artistName
+    return HomeView(viewModel: viewModel)
+        .preferredColorScheme(.dark)
 }
