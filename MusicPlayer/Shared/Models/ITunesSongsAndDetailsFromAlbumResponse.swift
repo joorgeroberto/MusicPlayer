@@ -10,7 +10,7 @@ struct ITunesSongsAndDetailsFromAlbumResponse: Decodable {
     let results: [ITunesSongsFromAlbumResult]
 }
 
-enum ITunesSongsFromAlbumResult: Decodable {
+enum ITunesSongsFromAlbumResult: Decodable, Equatable {
     case album(Album)
     case song(Song)
 
@@ -32,5 +32,22 @@ enum ITunesSongsFromAlbumResult: Decodable {
         default:
             throw DecodingError.dataCorruptedError(forKey: .wrapperType, in: container, debugDescription: "Unknown wrapper type: \(wrapperType)")
         }
+    }
+}
+
+// MARK: Fixtures
+extension ITunesSongsAndDetailsFromAlbumResponse {
+    static func sample(
+        resultCount: Int = 3,
+        results: [ITunesSongsFromAlbumResult] = [
+            ITunesSongsFromAlbumResult.album(Album.sample()),
+            ITunesSongsFromAlbumResult.song(Song.sample()),
+            ITunesSongsFromAlbumResult.song(Song.sample())
+        ]
+    ) -> Self {
+        .init(
+            resultCount: resultCount,
+            results: results
+        )
     }
 }

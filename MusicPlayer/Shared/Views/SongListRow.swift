@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-struct ListItem: View {
+struct SongListRow: View {
     @State var song: Song
 
     var body: some View {
@@ -26,11 +26,13 @@ struct ListItem: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 8)
         .padding(.horizontal, 16)
+        .background(Color.clear)
+        .contentShape(Rectangle())
     }
 }
 
 #Preview {
     let song = Song.sample()
-    ListItem(song: song)
+    SongListRow(song: song)
         .preferredColorScheme(.dark)
 }

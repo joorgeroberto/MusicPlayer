@@ -27,15 +27,19 @@ struct Song: Codable, Identifiable, Equatable, Hashable, ArtworkUpgradable {
     let trackId: Int
     let artistId: Int
     let trackName: String
-    let trackNumber: Int
+    private var rawTrackNumber: Int?
     let artistName: String
-    let albumId: Int
-    let albumName: String
+    let albumId: Int?
+    var albumName: String?
+    var albumTrackCount: Int?
     let previewUrl: String
     var artworkLowQuality: String
     let trackTimeMilliseconds: Double
     var trackTimeMinutesAndSeconds: String {
         trackTimeMilliseconds.toMinutesAndSeconds()
+    }
+    var trackNumber: Int {
+        rawTrackNumber ?? 1
     }
 
     var id: Int { trackId }
@@ -44,7 +48,8 @@ struct Song: Codable, Identifiable, Equatable, Hashable, ArtworkUpgradable {
         case trackId
         case artistId
         case trackName
-        case trackNumber
+        case albumTrackCount = "trackCount"
+        case rawTrackNumber = "trackNumber"
         case artistName
         case albumId = "collectionId"
         case albumName = "collectionName"
@@ -54,14 +59,17 @@ struct Song: Codable, Identifiable, Equatable, Hashable, ArtworkUpgradable {
     }
 }
 
+// MARK: Fixture
 extension Song {
     static func sample(
         trackId: Int = 1147165822,
         artistId: Int = 546381,
         trackName: String = "Run to the Hills (2015 Remaster)",
         artistName: String = "Iron Maiden",
-        albumId: Int = 1147165685,
-        albumName: String = "The Number of the Beast (2015 Remaster)",
+        albumId: Int? = 1147165685,
+        albumName: String? = "The Number of the Beast (2015 Remaster)",
+        trackNumber: Int = 6,
+        albumTrackCount: Int? = 8,
         previewUrl: String = "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/dc/e0/95/dce09593-59e9-7887-4788-b7b0545ab441/mzaf_4833405911961268816.plus.aac.p.m4a",
         artworkLowQuality: String = "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/12/6b/44/126b4441-6747-c411-b765-7e54aefbf79f/881034134448.jpg/100x100bb.jpg",
         trackTimeMilliseconds: Double = 233499
@@ -70,10 +78,11 @@ extension Song {
             trackId: trackId,
             artistId: artistId,
             trackName: trackName,
-            trackNumber: 6,
+            rawTrackNumber: trackNumber,
             artistName: artistName,
             albumId: albumId,
             albumName: albumName,
+            albumTrackCount: albumTrackCount,
             previewUrl: previewUrl,
             artworkLowQuality: artworkLowQuality,
             trackTimeMilliseconds: trackTimeMilliseconds

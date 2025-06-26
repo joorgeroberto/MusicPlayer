@@ -10,11 +10,11 @@ import SwiftUI
 import AVFoundation
 
 @MainActor
-class SongDetailsViewModel: ObservableObject {
+class SongDetailsViewModel: ErrorAlertViewModel {
     @Published var song: Song
     @Published var albumSongs: [Song] = []
     @Published var albumDetails: Album?
-    @Published var player: AVPlayer?
+    @Published var player: AVPlayerProtocol?
     @Published var isPlaying = false
 
     @Published var isForwardButtonAvailable = false
@@ -25,14 +25,26 @@ class SongDetailsViewModel: ObservableObject {
 
     @Published var currentTime: Double = 0
     @Published var duration: Double = 29
+
     private var timeObserver: Any?
+    private let avPlayerFactory: AVPlayerFactoryProtocol
+    private let avAudioSession: AVAudioSessionProtocol
 
     private let iTunesService: ITunesServiceProtocol
-    private var cancellables = Set<AnyCancellable>()
+    private(set) var cancellables = Set<AnyCancellable>()
 
-    init(song: Song, iTunesService: ITunesServiceProtocol = ITunesService()) {
+    init(
+        song: Song,
+        iTunesService: ITunesServiceProtocol = ITunesService(),
+        avPlayerFactory: AVPlayerFactoryProtocol = AVPlayerFactory(),
+        avAudioSession: AVAudioSessionProtocol = AVAudioSession.sharedInstance()
+    ) {
         self.song = song
         self.iTunesService = iTunesService
+        self.avPlayerFactory = avPlayerFactory
+        self.avAudioSession = avAudioSession
+
+        super.init()
 
         self.setupAVAudioSession()
 
@@ -59,28 +71,28 @@ class SongDetailsViewModel: ObservableObject {
     }
 
     func fetchSongsAndDetailsFromAlbum() async {
-        Task { @MainActor [iTunesService] in
-            do {
-                let response: ITunesSongsAndDetailsFromAlbumResponse = try await iTunesService.fetchSongsAndDetailsFromAlbum(withId: String(song.albumId))
+        guard let albumId = song.albumId else {
+            return
+        }
 
-                var fetchedSongs: [Song] = []
+        do {
+            let response: ITunesSongsAndDetailsFromAlbumResponse = try await iTunesService.fetchSongsAndDetailsFromAlbum(withId: String(albumId))
 
-                for result in response.results {
-                    switch result {
-                    case .song(let song):
-                        fetchedSongs.append(song)
-                    case .album(let album):
-                        self.albumDetails = album
-                    }
+            var fetchedSongs: [Song] = []
+
+            for result in response.results {
+                switch result {
+                case .song(let song):
+                    fetchedSongs.append(song)
+                case .album(let album):
+                    self.albumDetails = album
                 }
-
-                fetchedSongs.sort { ($0.trackNumber) < ($1.trackNumber) }
-                self.albumSongs = fetchedSongs
-
-            } catch {
-                // TODO: Add Error Alert
-                print(error)
             }
+
+            fetchedSongs.sort { ($0.trackNumber) < ($1.trackNumber) }
+            self.albumSongs = fetchedSongs
+        } catch {
+            showErrorAlert()
         }
     }
 }
@@ -91,15 +103,19 @@ extension SongDetailsViewModel {
         let isFirstSong = song.trackNumber == 1
         if !isFirstSong {
             resetPlayer()
-            song = albumSongs.first(where: { $0.trackNumber == song.trackNumber - 1 }) ?? song
+            if let previousSong = albumSongs.first(where: { $0.trackNumber == song.trackNumber - 1 }) {
+                self.song = previousSong
+            }
         }
     }
 
     func onForward() {
-        let isLastSong = song.trackNumber == albumDetails?.trackCount
+        let isLastSong = song.trackNumber == song.albumTrackCount
         if !isLastSong {
             resetPlayer()
-            song = albumSongs.first(where: { $0.trackNumber == song.trackNumber + 1 }) ?? song
+            if let nextSong = albumSongs.first(where: { $0.trackNumber == song.trackNumber + 1 }) {
+                self.song = nextSong
+            }
         }
     }
 }
@@ -133,25 +149,38 @@ private extension SongDetailsViewModel {
     }
 
     func updateAudioPlayerButtonsAvailability(song: Song) {
-        let isLastSong = song.trackNumber == self.albumDetails?.trackCount
-        self.isForwardButtonAvailable = !isLastSong
+        let isAlbumIdPopulated = song.albumId != nil
+        let isAlbumNamePopulated = song.albumName != nil
+        let isAlbumTrackCountPopulated = song.albumTrackCount != nil
+
+        let isAlbumAvailable = isAlbumIdPopulated && isAlbumNamePopulated && isAlbumTrackCountPopulated
+
+        let isLastSong = song.trackNumber == song.albumTrackCount
+        self.isForwardButtonAvailable = !isLastSong && isAlbumAvailable
 
         let isFirstSong = song.trackNumber == 1
-        self.isBackwardButtonAvailable = !isFirstSong
+        self.isBackwardButtonAvailable = !isFirstSong && isAlbumAvailable
     }
 
     func setupAVPlayer(url: String) {
-        guard let url = URL(string: url) else { return }
-        player = AVPlayer(url: url)
-        player?.automaticallyWaitsToMinimizeStalling = false
+        do {
+            player = try avPlayerFactory.makePlayer(with: url)
+            player?.automaticallyWaitsToMinimizeStalling = false
+        } catch {
+            showErrorAlert(
+                errorAlertMessage: "Unable to reproduce. Please try again!"
+            )
+        }
     }
 
     func setupAVAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-            try AVAudioSession.sharedInstance().setActive(true)
+            try avAudioSession.setCategory(.playback, mode: .default, options: [])
+            try avAudioSession.setActive(true, options: [])
         } catch {
-            // TODO: Show Error Alert.
+            showErrorAlert(
+                errorAlertMessage: "Unable to reproduce. Please try again!"
+            )
             print("Failure to configure AVAudioSession: \(error)")
         }
     }
@@ -159,12 +188,13 @@ private extension SongDetailsViewModel {
     func setupPeriodicTimeObserver() {
         guard let player = player else { return }
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+        let currentItem = player.currentItem
 
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             Task { @MainActor in
                 guard let self = self else { return }
                 self.currentTime = time.seconds
-                if let durationSeconds = player.currentItem?.duration.seconds, durationSeconds.isFinite {
+                if let durationSeconds = currentItem?.duration.seconds, durationSeconds.isFinite {
                     self.duration = durationSeconds - time.seconds
                 }
             }
@@ -195,7 +225,7 @@ private extension SongDetailsViewModel {
         self.onSeek(to: 0)
         self.isPlaying = false
         self.player?.pause()
-        self.player = nil
         self.removePeriodicTimeObserver()
+        self.player = nil
     }
 }
