@@ -44,8 +44,17 @@ struct PlaybackProgressSlider: View {
     }
 
     private func configureSliderThumb() {
-        let thumbImage = UIImage(systemName: "circle.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
-        UISlider.appearance().setThumbImage(thumbImage, for: .normal)
+        if let originalImage = UIImage(systemName: "circle.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal) {
+            let resizedImage = resizeImage(originalImage, targetSize: CGSize(width: 14, height: 14))
+            UISlider.appearance().setThumbImage(resizedImage, for: .normal)
+        }
+    }
+
+    private func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
     }
 
     private func configureSliderTrackAppearance() {
