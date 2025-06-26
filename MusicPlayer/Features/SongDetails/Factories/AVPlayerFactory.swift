@@ -12,7 +12,8 @@ protocol AVPlayerFactoryProtocol {
     func makePlayer(with url: String) throws -> AVPlayerProtocol?
 }
 
-class AVPlayerFactory: AVPlayerFactoryProtocol {
+@MainActor
+class AVPlayerFactory: @preconcurrency AVPlayerFactoryProtocol {
     func makePlayer(with url: String) throws -> AVPlayerProtocol? {
         guard let url = URL(string: url) else {
             throw CommonsErrors.invalidURL

@@ -17,9 +17,17 @@ class AVPlayerSpy: AVPlayerProtocol {
     private(set) var capturedSeekTime = CMTime(seconds: 0, preferredTimescale: 600)
     private(set) var removedTimeObservers: [Any] = []
     private(set) var addedTimeObservers: [(interval: CMTime, block: (CMTime) -> Void)] = []
+    private(set) var capturedInterval: CMTime?
+    private(set) var capturedQueue: DispatchQueue?
+    private(set) var capturedBlock: ((CMTime) -> Void)?
 
     var automaticallyWaitsToMinimizeStalling = false
-    var currentItem: AVPlayerItem? = nil
+    var mockedDuration: CMTime?
+    var wrappedCurrentItem: AVPlayerItemProtocol? //{
+//        let item = AVPlayerItem(url: URL(string: "https://example.com")!)
+//        if let duration = mockedDuration {}
+//        return item
+//    }
 
     func play() {
         playCallCount += 1
@@ -35,8 +43,23 @@ class AVPlayerSpy: AVPlayerProtocol {
     }
 
     func addPeriodicTimeObserver(forInterval interval: CMTime, queue: DispatchQueue?, using block: @escaping (CMTime) -> Void) -> Any {
+        capturedInterval = interval
+        capturedQueue = queue
+        capturedBlock = block
+        capturedBlock = { [weak self] time in
+            guard let self = self else { return }
+            let durationSeconds = self.mockedDuration?.seconds ?? 0
+
+            // Aqui dentro você pode simular como o ViewModel usaria isso
+            block(time)  // Simula o comportamento real chamando o bloco que o ViewModel registrou
+        }
+
         addedTimeObservers.append((interval, block))
         return "SampleObserver" as Any
+    }
+
+    func simulatePeriodicTimeObserverCallback(time: CMTime) {
+        capturedBlock?(time)
     }
 
     func removeTimeObserver(_ observer: Any) {

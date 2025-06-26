@@ -703,7 +703,45 @@ import AVFoundation
                 #expect(sut.isForwardButtonAvailable == false)
                 #expect(sut.isBackwardButtonAvailable == false)
             }
+
+            @Test
+            mutating func testSetupPeriodicTimeObserver_updatesCurrentTimeAndDuration() async {
+                // Given
+                avPlayerSpy.mockedDuration = CMTime(seconds: 30, preferredTimescale: 600)
+                let avPlayerFactorySpy = AVPlayerFactorySpy()
+                avPlayerFactorySpy.playerToReturn = avPlayerSpy
+
+                let sut = SongDetailsViewModel(
+                    song: song,
+                    iTunesService: iTunesServiceSpy,
+                    avPlayerFactory: avPlayerFactorySpy,
+                    avAudioSession: avAudioSessionSpy
+                )
+                sut.player = avPlayerSpy
+
+                // When
+                await confirmation(expectedCount: 1) { confirm in
+                    iTunesServiceSpy.onFetchMusicListCalled = {
+                        confirm()
+                    }
+                    avPlayerSpy.simulatePeriodicTimeObserverCallback(time: CMTime(seconds: 10, preferredTimescale: 600))
+                    try? await Task.sleep(for: .milliseconds(50))  // 2 seconds
+                }
+
+                // Then
+                #expect(sut.currentTime == 10)
+//                #expect(sut.duration == 20) // Porque mockedDuration = 30 - currentTime = 10
+            }
+
+
+            @Test func given_when_then() {
+                // Given
+                // When
+                // Then
+            }
+
         }
+    }
 
         @MainActor
         @Suite struct Failure {
@@ -742,7 +780,7 @@ import AVFoundation
                 #expect(avPlayerFactorySpy.callCount == 1)
             }
         }
-    }
+
     //    @Suite("showErrorAlert() Tests") struct fetchMusicList {
     //
     //        @Suite struct Success {

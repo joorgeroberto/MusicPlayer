@@ -116,5 +116,51 @@
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "6D6B1AF8-EF23-4B5C-9E90-F15BFEAD2673"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MusicPlayer/Features/SongDetails/ViewModels/SongDetailsViewModel.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "198"
+            endingLineNumber = "198"
+            landmarkName = "setupPeriodicTimeObserver()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "6D6B1AF8-EF23-4B5C-9E90-F15BFEAD2673 - 3502996b8ece3cf0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for closure #1 @Swift.MainActor @Sendable () async -&gt; () in closure #1 @Sendable (__C.CMTime) -&gt; () in MusicPlayer.SongDetailsViewModel.setupPeriodicTimeObserver() -&gt; ()"
+                  moduleName = "MusicPlayer.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/jorgedecarvalho/Documents/PersonalProjects/IOSProjects/MusicPlayer/MusicPlayer/Features/SongDetails/ViewModels/SongDetailsViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "198"
+                  endingLineNumber = "198">
+               </Location>
+               <Location
+                  uuid = "6D6B1AF8-EF23-4B5C-9E90-F15BFEAD2673 - 3502996b8ece3cf0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for closure #1 @Swift.MainActor @Sendable () async -&gt; () in closure #1 @Sendable (__C.CMTime) -&gt; () in MusicPlayer.SongDetailsViewModel.setupPeriodicTimeObserver() -&gt; ()"
+                  moduleName = "MusicPlayer.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/jorgedecarvalho/Documents/PersonalProjects/IOSProjects/MusicPlayer/MusicPlayer/Features/SongDetails/ViewModels/SongDetailsViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "198"
+                  endingLineNumber = "198">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
    </Breakpoints>
 </Bucket>

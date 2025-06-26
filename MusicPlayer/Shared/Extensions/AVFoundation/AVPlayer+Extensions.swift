@@ -19,11 +19,30 @@ protocol AVPlayerProtocol {
     ) -> Any
     func removeTimeObserver(_ observer: Any)
 
-    var currentItem: AVPlayerItem? { get }
+    var wrappedCurrentItem: AVPlayerItemProtocol? { get }
     var automaticallyWaitsToMinimizeStalling: Bool { get set }
 }
 
-extension AVPlayer: AVPlayerProtocol {}
+//extension AVPlayer: @preconcurrency AVPlayerProtocol {
+//    var wrappedCurrentItem: (any AVPlayerItemProtocol)? {
+//        get {
+//            return self.currentItem
+//        }
+//        set {
+//        }
+//    }
+//    
+////    var wrappedCurrentItem: AVPlayerItemProtocol? {
+////        return self.currentItem
+////    }
+//}
+
+extension AVPlayer: @preconcurrency AVPlayerProtocol {
+    var wrappedCurrentItem: AVPlayerItemProtocol? {
+        return self.currentItem
+    }
+}
+
 
 enum CommonsErrors: Error {
     case generic

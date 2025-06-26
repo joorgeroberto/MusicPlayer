@@ -188,25 +188,43 @@ private extension SongDetailsViewModel {
     func setupPeriodicTimeObserver() {
         guard let player = player else { return }
         let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
-        let currentItem = player.currentItem
+        let currentItem = player.wrappedCurrentItem
+        let durationSeconds = currentItem?.duration.seconds
 
         timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
             Task { @MainActor in
                 guard let self = self else { return }
                 self.currentTime = time.seconds
-                if let durationSeconds = currentItem?.duration.seconds, durationSeconds.isFinite {
+                if let durationSeconds, durationSeconds.isFinite {
                     self.duration = durationSeconds - time.seconds
                 }
             }
         }
     }
+//    func setupPeriodicTimeObserver() {
+//        guard let player = player else { return }
+//        let interval = CMTime(seconds: 0.5, preferredTimescale: 600)
+//
+//        let durationSeconds = player.wrappedCurrentItem?.duration.seconds
+//
+//        timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+//            Task { @MainActor in
+//                guard let self = self else { return }
+//                self.currentTime = time.seconds
+//
+//                if let durationSeconds, durationSeconds.isFinite {
+//                    self.duration = durationSeconds - time.seconds
+//                }
+//            }
+//        }
+//    }
 
     func setupPlayerDurationObserver() {
-        player?.currentItem?.publisher(for: \.status, options: [.initial, .new])
+        player?.wrappedCurrentItem?.wrappedPublisher(for: \.status, options: [.initial, .new])
             .sink { [weak self] status in
                 guard let self = self else { return }
                 if status == .readyToPlay,
-                   let durationSeconds = self.player?.currentItem?.duration.seconds,
+                   let durationSeconds = self.player?.wrappedCurrentItem?.duration.seconds,
                    durationSeconds.isFinite {
                     self.duration = durationSeconds
                 }
