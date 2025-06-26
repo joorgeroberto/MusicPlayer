@@ -50,6 +50,7 @@ class SongDetailsViewModel: ErrorAlertViewModel {
 
         self.bindSongChangesToPlayer()
         self.setupIsPlayingObserver()
+        self.setupCurrentTimeAndDurationObserver()
         Task {
             await self.fetchSongsAndDetailsFromAlbum()
         }
@@ -144,6 +145,19 @@ private extension SongDetailsViewModel {
                 self?.setupPeriodicTimeObserver()
                 self?.setupPlayerDurationObserver()
                 self?.updateAudioPlayerButtonsAvailability(song: song)
+            }
+            .store(in: &cancellables)
+    }
+
+    func setupCurrentTimeAndDurationObserver() {
+        $duration
+            .removeDuplicates()
+            .sink { [weak self] duration in
+                let isSongFinished = duration == 0
+                if isSongFinished {
+                    self?.isPlaying = false
+                    self?.onSeek(to: 0)
+                }
             }
             .store(in: &cancellables)
     }
