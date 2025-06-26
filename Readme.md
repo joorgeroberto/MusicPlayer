@@ -7,14 +7,11 @@ MusicPlayer is a SwiftUI iOS app that integrates with Apple's iTunes Search API.
 ## Features
 
 - **Search songs** using the iTunes Search API.
-- **View song details** including:
-  - Song name
-  - Artist name
-  - Album name
-  - Album artwork
-- **Play 30-second preview** of the selected song.
-- **Seek playback** using a slider to jump to any position in the preview.
-- **Navigate between tracks** in the album using forward and backward buttons.
+- **Song Details screen**, which includes:
+  - View the **Song** name, **Artist** name, **Album** name, and the **Album** artwork.
+  - **Play 30-second preview** of the selected song.
+  - **Seek playback** using a slider to jump to any position in the preview.
+  - **Navigate between tracks** in the album using forward and backward buttons.
 - **More Options Bottom Sheet** that allows:
   - Navigating to the Album Details screen.
 - **Album Details screen**:
@@ -56,6 +53,7 @@ MusicPlayer is a SwiftUI iOS app that integrates with Apple's iTunes Search API.
 - **Tests Implementation**: Unit tests focused on ViewModels and the network layer to increase reliability and ensure the correctness of the app’s business logic and data handling.
 - **API Results Pagination**: Seamless loading of additional data when the user scrolls to the end of song lists.
 - **SOLID Principles**: Code adheres to SOLID design principles for maintainability and scalability.
+- **Bitrise CI**: Automatic builds triggered on each merge to main. Pipeline available [here](https://app.bitrise.io/app/0e90ba75-ba8b-4526-b251-215f62397dbb/settings/general).
 
 ---
 
