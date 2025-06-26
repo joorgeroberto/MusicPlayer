@@ -11,11 +11,18 @@ import SwiftUI
 class AVPlayerFactorySpy: AVPlayerFactoryProtocol {
     private(set) var callCount = 0
     private(set) var receivedURLs: [String] = []
-    var playerToReturn: AVPlayerProtocol?
 
-    func makePlayer(with url: String) -> AVPlayerProtocol? {
+    var playerToReturn: AVPlayerProtocol?
+    var errorToThrow: Error?
+
+    func makePlayer(with url: String) throws -> AVPlayerProtocol? {
         callCount += 1
         receivedURLs.append(url)
+
+        if let error = errorToThrow {
+            throw error
+        }
+
         return playerToReturn
     }
 }
