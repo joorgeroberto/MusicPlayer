@@ -53,7 +53,7 @@ MusicPlayer is a SwiftUI iOS app that integrates with Apple's iTunes Search API.
 - **Tests Implementation**: Unit tests focused on ViewModels and the network layer to increase reliability and ensure the correctness of the app’s business logic and data handling.
 - **API Results Pagination**: Seamless loading of additional data when the user scrolls to the end of song lists.
 - **SOLID Principles**: Code adheres to SOLID design principles for maintainability and scalability.
-- **Bitrise CI**: Automatic builds triggered on each merge to main. Pipeline available [here](https://app.bitrise.io/app/0e90ba75-ba8b-4526-b251-215f62397dbb/settings/general).
+- **Bitrise CI**: Automatic builds triggered on each merge to main. Pipeline available [here](https://app.bitrise.io/app/0e90ba75-ba8b-4526-b251-215f62397dbb).
 
 ---
 
