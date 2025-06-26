@@ -72,7 +72,7 @@ MusicPlayer is a SwiftUI iOS app that integrates with Apple's iTunes Search API.
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/seuusuario/MusicPlayer.git
+git clone https://github.com/joorgeroberto/MusicPlayer.git
 cd MusicPlayer
 ````
 
@@ -106,6 +106,7 @@ This project is licensed under the MIT License. See the LICENSE file for details
       <sub><b>Jorge de Carvalho</b></sub>
     </a>
   </div>
+  <br /><br />
 
   <div align="center">
 
