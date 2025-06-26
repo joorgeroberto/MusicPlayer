@@ -743,4 +743,67 @@ import AVFoundation
             }
         }
     }
+
+    @MainActor
+    @Suite("setupCurrentTimeAndDurationObserver() Tests") struct setupCurrentTimeAndDurationObserverTests {
+
+        let iTunesServiceSpy = ITunesServiceSpy()
+        var song = Song.sample()
+
+        lazy var avPlayerSpy: AVPlayerSpy = {
+            AVPlayerSpy()
+        }()
+        lazy var avAudioSessionSpy: AVAudioSessionSpy = {
+            AVAudioSessionSpy()
+        }()
+        lazy var avPlayerFactorySpy: AVPlayerFactorySpy = {
+            var avPlayerFactorySpy = AVPlayerFactorySpy()
+            avPlayerFactorySpy.playerToReturn = avPlayerSpy
+            return avPlayerFactorySpy
+        }()
+
+        @Test("Should not stop playback or call onSeek when duration changes to a non-zero value.")
+        mutating func givenDurationIsNotZero_whenDurationChanges_thenIsPlayingRemainsTrueAndOnSeekIsNotCalled() {
+            // Given
+            let sut = SongDetailsViewModel(
+                song: song,
+                iTunesService: iTunesServiceSpy,
+                avPlayerFactory: avPlayerFactorySpy,
+                avAudioSession: avAudioSessionSpy
+            )
+            sut.isPlaying = true
+
+            // When
+            sut.duration = 29
+
+            // Then
+            #expect(sut.isPlaying == true)
+            #expect(avPlayerSpy.seekCallCount == 0)
+            #expect(sut.duration == 29.0)
+        }
+
+        @Test("Should stop playback and seek to zero when duration changes to zero.")
+        mutating func givenDurationIsZero_whenDurationChanges_thenIsPlayingBecomesFalseAndOnSeekIsCalledWithZero() {
+            // Given
+            let expectedCapturedSeekTime = CMTime(
+                seconds: 0,
+                preferredTimescale: 600
+            )
+            let sut = SongDetailsViewModel(
+                song: song,
+                iTunesService: iTunesServiceSpy,
+                avPlayerFactory: avPlayerFactorySpy,
+                avAudioSession: avAudioSessionSpy
+            )
+            sut.isPlaying = true
+
+            // When
+            sut.duration = 0
+
+            // Then
+            #expect(sut.isPlaying == false)
+            #expect(avPlayerSpy.seekCallCount == 1)
+            #expect(avPlayerSpy.capturedSeekTime == expectedCapturedSeekTime)
+        }
+    }
 }
