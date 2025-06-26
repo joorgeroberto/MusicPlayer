@@ -53,7 +53,7 @@ MusicPlayer is a SwiftUI iOS app that integrates with Apple's iTunes Search API.
 
 - **Swift 6**: The project is fully implemented in Swift 6, leveraging its latest features and improvements.
 - **MVVM Architecture Pattern**: Clear separation of concerns between UI, business logic, and data.
-- **Tests Implementation**: Unit and integration tests are included to ensure reliability.
+- **Tests Implementation**: Unit tests focused on ViewModels and the network layer to increase reliability and ensure the correctness of the app’s business logic and data handling.
 - **API Results Pagination**: Seamless loading of additional data when the user scrolls to the end of song lists.
 - **SOLID Principles**: Code adheres to SOLID design principles for maintainability and scalability.
 
